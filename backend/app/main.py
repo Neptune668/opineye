@@ -7,11 +7,14 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
+from app import settings
 from app.core.store import ensure_data_dirs
 from app.core.ws_manager import ws_manager
 from app.api.routes_status import router as status_router
@@ -80,6 +83,33 @@ async def websocket_endpoint(websocket: WebSocket):
         ws_manager.disconnect(websocket)
     except Exception:
         ws_manager.disconnect(websocket)
+
+
+# SPA 静态托管：前端构建产物 dist/ 存在时挂载，/ 与 /graph-viewer* 回退到 index.html
+_FRONTEND_DIST = settings.PROJECT_DIR / "frontend" / "dist"
+
+
+def _setup_spa() -> None:
+    if not _FRONTEND_DIST.exists():
+        logger.info("未检测到前端构建产物，跳过 SPA 静态托管")
+        return
+
+    app.mount(
+        "/assets",
+        StaticFiles(directory=str(_FRONTEND_DIST / "assets")),
+        name="assets",
+    )
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        path = _FRONTEND_DIST / full_path
+        if path.is_file() and path.exists():
+            from fastapi.responses import FileResponse
+            return FileResponse(path)
+        return FileResponse(_FRONTEND_DIST / "index.html")
+
+
+_setup_spa()
 
 
 @app.exception_handler(Exception)
