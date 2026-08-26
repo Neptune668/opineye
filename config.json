@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "system": {
+    "name": "opineye",
+    "default_apps": ["topic_search", "media_search", "forum_collect", "insight", "report", "graph"]
+  },
+  "apps": {
+    "topic_search": { "enabled": true },
+    "media_search": { "enabled": true },
+    "forum_collect": { "enabled": true },
+    "insight": { "enabled": true },
+    "report": { "enabled": true },
+    "graph": { "enabled": true }
+  },
+  "search": {
+    "max_sources": 100,
+    "timeout_seconds": 30
+  },
+  "forum": {
+    "poll_interval_seconds": 10
+  },
+  "analysis": {
+    "mode": "rule"
+  }
+}
