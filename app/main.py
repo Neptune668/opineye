@@ -6,8 +6,11 @@ T1 阶段：启动服务、统一响应与异常处理、健康检查。
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app import __version__
 from app.api import apps as apps_api
@@ -34,6 +37,18 @@ app.include_router(forum_api.router)
 app.include_router(graph_api.router)
 app.include_router(system_api.router)
 app.include_router(ws_api.router)
+
+# 静态文件与前端页面
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+@app.get("/")
+def index() -> JSONResponse:
+    """控制台首页（前端阶段）。"""
+    from fastapi.responses import FileResponse
+
+    return FileResponse(str(STATIC_DIR / "index.html"))
 
 
 @app.on_event("startup")

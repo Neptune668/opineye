@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>舆情分析平台 · 控制台</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span>舆情分析平台</span>
+      </div>
+      <nav class="nav">
+        <a class="nav-item active" data-page="console">控制台首页</a>
+        <a class="nav-item" data-page="search">主题检索</a>
+        <a class="nav-item" data-page="forum">论坛监控</a>
+        <a class="nav-item" data-page="graph">图谱查看</a>
+        <a class="nav-item" data-page="config">配置管理</a>
+        <a class="nav-item" data-page="system">系统状态</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="ws-indicator" class="ws-indicator off">● 实时消息未连接</span>
+      </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 控制台首页 -->
+      <section class="page active" id="page-console">
+        <h2>控制台首页</h2>
+        <div class="toolbar">
+          <button class="btn primary" id="btn-system-start">启动系统</button>
+          <button class="btn danger" id="btn-system-shutdown">关闭系统</button>
+        </div>
+        <div class="cards" id="app-cards"></div>
+      </section>
+
+      <!-- 主题检索 -->
+      <section class="page" id="page-search">
+        <h2>主题检索</h2>
+        <div class="search-box">
+          <input type="text" id="search-query" placeholder="输入主题词，如：新品" />
+          <select id="search-sources" multiple size="5">
+            <option value="news">news</option>
+            <option value="image">image</option>
+            <option value="video">video</option>
+            <option value="forum_post">forum_post</option>
+            <option value="internal_data" selected>internal_data</option>
+          </select>
+          <button class="btn primary" id="btn-search">发起检索</button>
+        </div>
+        <div id="search-result" class="result-panel"></div>
+      </section>
+
+      <!-- 论坛监控 -->
+      <section class="page" id="page-forum">
+        <h2>论坛监控</h2>
+        <div class="toolbar">
+          <button class="btn primary" id="btn-forum-start">启动采集</button>
+          <button class="btn danger" id="btn-forum-stop">停止采集</button>
+          <button class="btn" id="btn-forum-refresh">刷新日志</button>
+        </div>
+        <div class="result-panel">
+          <h3>最新日志</h3>
+          <pre id="forum-log" class="log-view"></pre>
+        </div>
+        <div class="history-box">
+          <input type="date" id="forum-date" />
+          <button class="btn" id="btn-forum-history">查询历史</button>
+          <pre id="forum-history" class="log-view"></pre>
+        </div>
+      </section>
+
+      <!-- 图谱查看 -->
+      <section class="page" id="page-graph">
+        <h2>图谱查看</h2>
+        <div class="toolbar">
+          <button class="btn" id="btn-graph-latest">最新图谱</button>
+          <input type="text" id="graph-report-id" placeholder="输入 report_id" />
+          <button class="btn" id="btn-graph-load">加载指定图谱</button>
+        </div>
+        <div id="graph-view" class="graph-view"></div>
+      </section>
+
+      <!-- 配置管理 -->
+      <section class="page" id="page-config">
+        <h2>配置管理</h2>
+        <div class="toolbar">
+          <button class="btn" id="btn-config-load">读取配置</button>
+        </div>
+        <textarea id="config-editor" class="config-editor"></textarea>
+        <button class="btn primary" id="btn-config-save">保存配置</button>
+      </section>
+
+      <!-- 系统状态 -->
+      <section class="page" id="page-system">
+        <h2>系统状态</h2>
+        <div class="cards" id="system-cards"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
