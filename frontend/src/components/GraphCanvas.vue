@@ -58,7 +58,10 @@ onMounted(() => {
     chart = echarts.init(chartRef.value)
     chart.on('click', (params) => {
       if (params.dataType === 'node') {
-        emit('node-click', params.data.id)
+        const data = params.data as { id: string } | null
+        if (data && data.id) {
+          emit('node-click', data.id)
+        }
       }
     })
     render()

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import settings
@@ -104,7 +104,6 @@ def _setup_spa() -> None:
     async def spa_fallback(full_path: str):
         path = _FRONTEND_DIST / full_path
         if path.is_file() and path.exists():
-            from fastapi.responses import FileResponse
             return FileResponse(path)
         return FileResponse(_FRONTEND_DIST / "index.html")
 
