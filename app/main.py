@@ -50,6 +50,18 @@ def index() -> FileResponse:
     return FileResponse(str(STATIC_DIR / "index.html"))
 
 
+@app.get("/graph-viewer")
+def graph_viewer_index() -> FileResponse:
+    """图谱查看页（无 report_id，前端加载最新图谱）。"""
+    return FileResponse(str(STATIC_DIR / "index.html"))
+
+
+@app.get("/graph-viewer/{report_id}")
+def graph_viewer_by_report(report_id: str) -> FileResponse:
+    """图谱查看页（指定 report_id，前端解析路径并加载对应图谱）。"""
+    return FileResponse(str(STATIC_DIR / "index.html"))
+
+
 @app.on_event("startup")
 def _startup() -> None:
     ensure_dirs()
@@ -59,6 +71,7 @@ def _startup() -> None:
 @app.exception_handler(AppError)
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
     """业务异常统一响应。"""
+    _publish_error("api", exc.message)
     return JSONResponse(
         status_code=exc.http_status,
         content={"code": exc.code, "message": exc.message, "data": None},
@@ -79,9 +92,23 @@ async def http_error_handler(_: Request, exc: StarletteHTTPException) -> JSONRes
 async def unhandled_error_handler(_: Request, exc: Exception) -> JSONResponse:
     """未捕获异常兜底，统一返回 500，避免暴露内部细节。"""
     logger.exception("未处理异常", extra={"error": str(exc)})
+    _publish_error("system", str(exc))
     return JSONResponse(
         status_code=500,
         content={"code": 5001, "message": "系统内部错误", "data": None},
+    )
+
+
+def _publish_error(module_name: str, error_message: str) -> None:
+    """发布 error 事件（G5）。"""
+    from app.dependencies import get_event_bus
+    from app.events.base import DomainEvent, EventType
+
+    get_event_bus().publish(
+        DomainEvent(
+            type=EventType.ERROR,
+            payload={"module_name": module_name, "error_message": error_message},
+        )
     )
 
 

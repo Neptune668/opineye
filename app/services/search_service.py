@@ -14,12 +14,14 @@ from typing import Protocol
 from app.analysis import channel, evidence, keyword, sentiment, timeline
 from app.analysis.llm import LLMClient
 from app.analysis.models import AnalysisOutput
+from app.events.base import DomainEvent, EventBus, EventType
 from app.exceptions import ValidationError
 from app.services.collector import CollectRequest, Collector, SourceItem
 from app.services.graph_builder import build_graph
 from app.services.graph_service import FileGraphStore
 from app.services.report_service import ReportMeta, ReportWriter
 from app.utils.logging import get_logger
+from app.utils.storage import GRAPHS_DIR
 
 logger = get_logger(__name__)
 
@@ -56,11 +58,13 @@ class RuleSearchEngine:
         report_writer: ReportWriter,
         graph_store: FileGraphStore,
         llm_client: LLMClient | None = None,
+        event_bus: EventBus | None = None,
     ) -> None:
         self._collector: Collector = collector
         self._report_writer: ReportWriter = report_writer
         self._graph_store: FileGraphStore = graph_store
         self._llm_client: LLMClient | None = llm_client
+        self._event_bus: EventBus | None = event_bus
 
     def search(self, request: SearchRequest) -> SearchResult:
         query = request.query.strip()
@@ -79,7 +83,34 @@ class RuleSearchEngine:
         self._graph_store.save(graph)
         # 尽力落库检索任务与来源（降级不阻断）
         self._persist_task(task_id, query, request.source_types, report.report_id, sources)
+        # 发布 graph_ready 事件（G4）
+        self._publish_graph_ready(report.report_id)
+        # 发布 app_output 事件（G3 选项3：检索完成推分析摘要）
+        self._publish_app_output("topic_search", analysis.overview)
         return SearchResult(task_id=task_id, sources=sources, analysis=analysis, report=report)
+
+    def _publish_graph_ready(self, report_id: str) -> None:
+        """发布 graph_ready 事件（含 report_id 与 graph 路径）。"""
+        if self._event_bus is None:
+            return
+        graph_path = str(GRAPHS_DIR / report_id / "graph.json")
+        self._event_bus.publish(
+            DomainEvent(
+                type=EventType.GRAPH_READY,
+                payload={"report_id": report_id, "graph_path": graph_path},
+            )
+        )
+
+    def _publish_app_output(self, app_name: str, output_text: str) -> None:
+        """发布 app_output 事件（含 app_name 与 output_text）。"""
+        if self._event_bus is None:
+            return
+        self._event_bus.publish(
+            DomainEvent(
+                type=EventType.APP_OUTPUT,
+                payload={"app_name": app_name, "output_text": output_text},
+            )
+        )
 
     def _persist_task(
         self,

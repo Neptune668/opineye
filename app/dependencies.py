@@ -102,6 +102,7 @@ def get_search_engine() -> SearchEngine:
         report_writer=get_report_writer(),
         graph_store=get_graph_store(),
         llm_client=build_llm_client(),
+        event_bus=get_event_bus(),
     )
 
 

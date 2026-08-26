@@ -78,6 +78,7 @@ class InMemoryProcessManager:
             self._set(app_name, AppState.STARTING)
             # 占位任务直接模拟运行中（真实逻辑在 T6/T7 中由 Worker 上报）
             self._set(app_name, AppState.RUNNING)
+            self._publish_output(app_name, f"应用 {app_name} 已启动")
             return self._states[app_name]
 
     def stop(self, app_name: str) -> AppStatus:
@@ -93,6 +94,7 @@ class InMemoryProcessManager:
 
             self._set(app_name, AppState.STOPPING)
             self._set(app_name, AppState.STOPPED)
+            self._publish_output(app_name, f"应用 {app_name} 已停止")
             return self._states[app_name]
 
     def status(self, app_name: str | None = None) -> dict[str, AppStatus]:
@@ -125,3 +127,12 @@ class InMemoryProcessManager:
             DomainEvent(type=EventType.APP_STATUS, payload={"app_name": app_name, "status": new_state.value})
         )
         logger.info("应用状态变更", extra={"app": app_name, "status": new_state.value})
+
+    def _publish_output(self, app_name: str, output_text: str) -> None:
+        """发布 app_output 事件（G3 选项1：启停状态说明）。"""
+        self._event_bus.publish(
+            DomainEvent(
+                type=EventType.APP_OUTPUT,
+                payload={"app_name": app_name, "output_text": output_text},
+            )
+        )
