@@ -9,9 +9,17 @@ from functools import lru_cache
 
 from app.events.base import EventBus
 from app.events.memory_bus import MemoryEventBus
+from app.services.collector import (
+    Collector,
+    CompositeCollector,
+    InternalDataCollector,
+    PlaceholderCollector,
+)
 from app.services.config_service import ConfigService, JsonConfigService
+from app.services.output_service import AppOutputReader, FileAppOutputReader
 from app.services.process_manager import InMemoryProcessManager, ProcessManager
 from app.tasks.registry import AppRegistry
+from app.utils.constants import SourceType
 
 
 @lru_cache
@@ -36,3 +44,9 @@ def get_app_registry() -> AppRegistry:
 def get_process_manager() -> ProcessManager:
     """返回进程内单例进程管理器（T4 交付，内存实现）。"""
     return InMemoryProcessManager(registry=get_app_registry(), event_bus=get_event_bus())
+
+
+@lru_cache
+def get_app_output_reader() -> AppOutputReader:
+    """返回进程内单例应用输出读取器（T5 交付）。"""
+    return FileAppOutputReader()
