@@ -23,7 +23,8 @@ def analyze(items: list[SourceItem], query: str, top_n: int = 10) -> list[Eviden
                 title=it.title,
                 url=it.url,
                 summary=it.summary,
-                ref=f"source#{idx}",
+                # 优先用来源链接作为引用标识，保证结论可追溯到来源（需求 2.2.8）
+                ref=it.url or f"source#{idx}",
             )
         )
     return evidence

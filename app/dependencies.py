@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from app.config import settings
 from app.events.base import EventBus
 from app.events.memory_bus import MemoryEventBus
 from app.analysis.llm import build_llm_client
@@ -18,7 +19,7 @@ from app.services.collector import (
 )
 from app.services.config_service import ConfigService, JsonConfigService
 from app.services.datasource import build_datasource
-from app.services.forum_service import ForumCollector, SimulatedForumCollector
+from app.services.forum_service import ForumCollector, ZhihuForumCollector
 from app.services.graph_service import FileGraphStore
 from app.services.output_service import AppOutputReader, FileAppOutputReader
 from app.services.process_manager import InMemoryProcessManager, ProcessManager
@@ -60,17 +61,8 @@ def get_app_output_reader() -> AppOutputReader:
     return FileAppOutputReader()
 
 
-@lru_cache
-def get_collector() -> Collector:
-    """返回组合采集器（T6 交付）。
-
-    internal_data 为真实离线采集；news/image/video/forum_post
-    通过可插拔数据源适配器（默认 file 类型）采集。
-    """
-    # 从 config.json 读取数据源配置（缺省提供 file 默认值）
-    config = get_config_service().read().data
-    ds_configs = config.get("datasources", {})
-
+def _build_collectors(ds_configs: dict) -> dict[str, Collector]:
+    """根据数据源配置构建各来源采集器映射。"""
     collectors: dict[str, Collector] = {
         SourceType.INTERNAL_DATA.value: InternalDataCollector(),
     }
@@ -79,7 +71,24 @@ def get_collector() -> Collector:
         collectors[source_type.value] = DataSourceCollector(
             source_type.value, build_datasource(ds_cfg)
         )
-    return CompositeCollector(collectors)
+    return collectors
+
+
+@lru_cache
+def get_collector() -> Collector:
+    """返回组合采集器（T6 交付）。
+
+    internal_data 为真实离线采集；news/image/video/forum_post
+    通过可插拔数据源适配器（默认 file 类型）采集。
+
+    注册 datasources 配置 watcher，配置保存后热更新采集器映射。
+    """
+    ds_configs = get_config_service().read().data.get("datasources", {})
+    composite = CompositeCollector(_build_collectors(ds_configs))
+    get_config_service().watch(
+        "datasources", lambda new_ds: composite.refresh(_build_collectors(new_ds))
+    )
+    return composite
 
 
 @lru_cache
@@ -108,8 +117,15 @@ def get_search_engine() -> SearchEngine:
 
 @lru_cache
 def get_forum_collector() -> ForumCollector:
-    """返回论坛采集器（T9 交付，模拟实现）。"""
-    return SimulatedForumCollector()
+    """返回论坛采集器（T9 交付，知乎热榜真实实现，降级 file 数据源）。"""
+    config = get_config_service().read().data
+    poll_interval = float(config.get("forum", {}).get("poll_interval_seconds", 10))
+    forum_cfg = config.get("datasources", {}).get("forum_post", {})
+    return ZhihuForumCollector(
+        poll_interval=poll_interval,
+        max_results=int(forum_cfg.get("max_results", 20)),
+        z_c0=settings.z_c0,
+    )
 
 
 @lru_cache

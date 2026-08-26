@@ -38,18 +38,9 @@ def build_graph(report_id: str, topic: str, analysis: AnalysisOutput) -> GraphDa
         )
 
     # 关键词节点
-    for kw in _extract_keywords_from_overview(analysis.overview):
+    for kw in analysis.keywords:
         kw_node_id = f"kw_{kw}"
         nodes.append(GraphNode(node_id=kw_node_id, node_type="keyword", label=kw))
         edges.append(GraphEdge(source="topic", target=kw_node_id, relation_type="has_keyword"))
 
     return GraphData(report_id=report_id, nodes=nodes, edges=edges)
-
-
-def _extract_keywords_from_overview(overview: str) -> list[str]:
-    """从概述文本中提取关键词（简化：取「涉及关键词：」后的内容）。"""
-    marker = "涉及关键词："
-    if marker not in overview:
-        return []
-    kw_part = overview.split(marker, 1)[1].split("。")[0]
-    return [k.strip() for k in kw_part.split("、") if k.strip()]

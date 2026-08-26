@@ -38,6 +38,7 @@ class AnalysisOutput:
     """结构化分析结果（对应需求 2.2.11 报告 8 节，结论摘要由 T8 汇总）。"""
 
     overview: str = ""                          # 事件概述
+    keywords: list[str] = field(default_factory=list)      # 关键词（jieba 抽取）
     timeline: list[TimelineEvent] = field(default_factory=list)
     channels: dict[str, int] = field(default_factory=dict)   # 传播渠道分布
     viewpoints: list[str] = field(default_factory=list)      # 主要观点

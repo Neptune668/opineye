@@ -11,7 +11,18 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol
 
-from app.utils.storage import OUTPUTS_DIR, RUNTIME_DIR
+from app.utils.storage import OUTPUTS_DIR, RUNTIME_DIR, write_text
+
+
+def write_output(app_name: str, text: str) -> None:
+    """将应用最近一次文本输出落盘到 outputs/{app_name}/latest.txt。
+
+    对应需求 2.2.7：保存单功能应用最近一次文本输出结果，
+    供 /api/output/{app_name} 查询。
+    """
+    if not text:
+        return
+    write_text(OUTPUTS_DIR / app_name / "latest.txt", text)
 
 
 class AppOutputReader(Protocol):

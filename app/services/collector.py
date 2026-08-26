@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 from typing import Protocol
 
@@ -88,15 +89,26 @@ class DataSourceCollector:
 
 
 class CompositeCollector:
-    """组合采集器：按 source_types 分发到对应采集器并汇总。"""
+    """组合采集器：按 source_types 分发到对应采集器并汇总。
+
+    支持 refresh() 热更新采集器映射，供配置变更后动态替换数据源。
+    """
 
     def __init__(self, collectors: dict[str, Collector]) -> None:
+        self._lock = threading.RLock()
         self._collectors = collectors
 
+    def refresh(self, collectors: dict[str, Collector]) -> None:
+        """热更新采集器映射（线程安全）。"""
+        with self._lock:
+            self._collectors = collectors
+
     def collect(self, request: CollectRequest) -> list[SourceItem]:
+        with self._lock:
+            collectors = self._collectors
         result: list[SourceItem] = []
         for st in request.source_types:
-            collector = self._collectors.get(st)
+            collector = collectors.get(st)
             if collector is None:
                 logger.warning("未知来源类型", extra={"source_type": st})
                 continue

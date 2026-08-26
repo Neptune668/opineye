@@ -19,6 +19,7 @@ from app.exceptions import ValidationError
 from app.services.collector import CollectRequest, Collector, SourceItem
 from app.services.graph_builder import build_graph
 from app.services.graph_service import FileGraphStore
+from app.services.output_service import write_output
 from app.services.report_service import ReportMeta, ReportWriter
 from app.utils.logging import get_logger
 from app.utils.storage import GRAPHS_DIR
@@ -75,6 +76,7 @@ class RuleSearchEngine:
         sources = self._collector.collect(
             CollectRequest(query=query, source_types=request.source_types)
         )
+        sources = self._cap_sources(sources)
         analysis = self._analyze(query, sources)
         # 方案 A：检索内同步生成报告
         report = self._report_writer.write(analysis, query)
@@ -85,9 +87,41 @@ class RuleSearchEngine:
         self._persist_task(task_id, query, request.source_types, report.report_id, sources)
         # 发布 graph_ready 事件（G4）
         self._publish_graph_ready(report.report_id)
-        # 发布 app_output 事件（G3 选项3：检索完成推分析摘要）
+        # 发布 app_output 事件（G3 选项3：检索完成推分析摘要）并落盘最近输出
         self._publish_app_output("topic_search", analysis.overview)
+        self._write_topic_output(query, analysis, report)
         return SearchResult(task_id=task_id, sources=sources, analysis=analysis, report=report)
+
+    def _cap_sources(self, sources: list[SourceItem]) -> list[SourceItem]:
+        """按 config.json 的 search.max_sources 截断来源，避免分析量过大。"""
+        try:
+            from app.dependencies import get_config_service
+
+            max_sources = int(
+                get_config_service().read().data.get("search", {}).get("max_sources", 0) or 0
+            )
+        except Exception:  # noqa: BLE001 - 配置读取失败不阻断
+            max_sources = 0
+        if max_sources and len(sources) > max_sources:
+            return sources[:max_sources]
+        return sources
+
+    def _write_topic_output(self, query: str, analysis: AnalysisOutput, report: ReportMeta) -> None:
+        """落盘 topic_search 最近输出（outputs/topic_search/latest.txt）。"""
+        lines = [
+            analysis.overview,
+            "",
+            "情绪倾向："
+            f"正向 {analysis.sentiment.positive} / 中性 {analysis.sentiment.neutral} / "
+            f"负向 {analysis.sentiment.negative}（整体 {analysis.sentiment.overall}）",
+            "",
+            "风险判断：",
+        ]
+        lines.extend(f"- {r}" for r in analysis.risks)
+        lines.append("")
+        lines.append(f"报告编号：{report.report_id}")
+        lines.append(f"报告文件：{report.file_path}")
+        write_output("topic_search", "\n".join(lines))
 
     def _publish_graph_ready(self, report_id: str) -> None:
         """发布 graph_ready 事件（含 report_id 与 graph 路径）。"""
@@ -153,7 +187,7 @@ class RuleSearchEngine:
             logger.exception("检索任务落库失败（降级）", extra={"task_id": task_id})
 
     def _analyze(self, query: str, sources: list[SourceItem]) -> AnalysisOutput:
-        keywords = keyword.extract_keywords(sources)
+        keywords = keyword.extract_keywords(sources, query=query)
         viewpoints = self._viewpoints(query, sources, keywords)
         risks = self._risks(sources)
 
@@ -163,6 +197,7 @@ class RuleSearchEngine:
 
         return AnalysisOutput(
             overview=keyword.build_overview(query, sources, keywords),
+            keywords=keywords,
             timeline=timeline.analyze(sources),
             channels=channel.analyze(sources),
             viewpoints=viewpoints,

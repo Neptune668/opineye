@@ -6,6 +6,7 @@ T1 阶段：启动服务、统一响应与异常处理、健康检查。
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -23,13 +24,35 @@ from app.api import output as output_api
 from app.api import search as search_api
 from app.api import system as system_api
 from app.api import ws as ws_api
+from app.config import settings
 from app.exceptions import AppError
 from app.utils.logging import get_logger
 from app.utils.storage import ensure_dirs
 
 logger = get_logger(__name__)
 
-app = FastAPI(title="opineye", version=__version__)
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """应用生命周期：初始化目录、内置管理员，并校验安全配置。"""
+    ensure_dirs()
+
+    if settings.secret_key == "change-me":
+        logger.warning("SECRET_KEY 仍为默认值，生产环境请务必修改")
+
+    # 初始化内置 admin 管理员（若不存在）
+    try:
+        from app.services.user_init import ensure_root_user
+
+        ensure_root_user()
+    except Exception:  # noqa: BLE001 - admin 初始化失败不阻断启动
+        logger.exception("admin 管理员初始化失败")
+
+    logger.info("应用启动", extra={"version": __version__})
+    yield
+
+
+app = FastAPI(title="opineye", version=__version__, lifespan=lifespan)
 
 app.include_router(auth_api.router)
 app.include_router(config_api.router)
@@ -62,19 +85,6 @@ def graph_viewer_index() -> FileResponse:
 def graph_viewer_by_report(report_id: str) -> FileResponse:
     """图谱查看页（指定 report_id，前端解析路径并加载对应图谱）。"""
     return FileResponse(str(STATIC_DIR / "index.html"))
-
-
-@app.on_event("startup")
-def _startup() -> None:
-    ensure_dirs()
-    # 初始化内置 root 管理员（若不存在）
-    try:
-        from app.services.user_init import ensure_root_user
-
-        ensure_root_user()
-    except Exception:  # noqa: BLE001 - root 初始化失败不阻断启动
-        logger.exception("root 管理员初始化失败")
-    logger.info("应用启动", extra={"version": __version__})
 
 
 @app.exception_handler(AppError)

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import secrets
 import time
 from dataclasses import dataclass
 
@@ -81,15 +82,40 @@ class TokenPayload:
     role: str
 
 
+# 密码哈希算法与迭代次数（PBKDF2-HMAC-SHA256）
+PBKDF2_ALGORITHM = "pbkdf2_sha256"
+PBKDF2_ITERATIONS = 260_000
+
+
 def hash_password(password: str) -> str:
-    """使用 HMAC-SHA256 加盐哈希（基于 secret_key），不存明文。"""
-    salt = settings.secret_key.encode("utf-8")
-    return hmac.new(salt, password.encode("utf-8"), hashlib.sha256).hexdigest()
+    """使用 PBKDF2-HMAC-SHA256 + 每用户随机盐哈希，不存明文。
+
+    格式：pbkdf2_sha256$<iterations>$<salt_hex>$<hash_hex>
+    """
+    salt = secrets.token_bytes(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PBKDF2_ITERATIONS)
+    return f"{PBKDF2_ALGORITHM}${PBKDF2_ITERATIONS}${salt.hex()}${dk.hex()}"
 
 
 def verify_password(password: str, password_hash: str) -> bool:
-    """校验密码是否匹配哈希。"""
-    return hmac.compare_digest(hash_password(password), password_hash)
+    """校验密码是否匹配哈希，兼容旧版 HMAC 格式。"""
+    parts = password_hash.split("$")
+    if len(parts) == 4 and parts[0] == PBKDF2_ALGORITHM:
+        _, iterations, salt_hex, hash_hex = parts
+        try:
+            salt = bytes.fromhex(salt_hex)
+            expected = bytes.fromhex(hash_hex)
+        except ValueError:
+            return False
+        dk = hashlib.pbkdf2_hmac(
+            "sha256", password.encode("utf-8"), salt, int(iterations)
+        )
+        return hmac.compare_digest(dk, expected)
+
+    # 向后兼容：旧实现为 HMAC-SHA256（全局 secret_key 作盐）
+    salt = settings.secret_key.encode("utf-8")
+    legacy = hmac.new(salt, password.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(legacy, password_hash)
 
 
 def create_token(username: str, role: str) -> str:
