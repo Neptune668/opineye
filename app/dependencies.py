@@ -22,6 +22,8 @@ from app.services.output_service import AppOutputReader, FileAppOutputReader
 from app.services.process_manager import InMemoryProcessManager, ProcessManager
 from app.services.report_service import MarkdownReportWriter, ReportWriter
 from app.services.search_service import RuleSearchEngine, SearchEngine
+from app.services.system_service import InMemorySystemService, SystemService
+from app.services.ws_manager import ConnectionManager
 from app.tasks.registry import AppRegistry
 from app.utils.constants import SourceType
 
@@ -98,3 +100,15 @@ def get_search_engine() -> SearchEngine:
 def get_forum_collector() -> ForumCollector:
     """返回论坛采集器（T9 交付，模拟实现）。"""
     return SimulatedForumCollector()
+
+
+@lru_cache
+def get_system_service() -> SystemService:
+    """返回系统启停服务（T11 交付）。"""
+    return InMemorySystemService(process_manager=get_process_manager(), event_bus=get_event_bus())
+
+
+@lru_cache
+def get_connection_manager() -> ConnectionManager:
+    """返回 WebSocket 连接管理器（T11 交付）。"""
+    return ConnectionManager(event_bus=get_event_bus())

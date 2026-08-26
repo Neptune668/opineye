@@ -16,6 +16,8 @@ from app.api import forum as forum_api
 from app.api import graph as graph_api
 from app.api import output as output_api
 from app.api import search as search_api
+from app.api import system as system_api
+from app.api import ws as ws_api
 from app.exceptions import AppError
 from app.utils.logging import get_logger
 from app.utils.storage import ensure_dirs
@@ -30,6 +32,8 @@ app.include_router(output_api.router)
 app.include_router(search_api.router)
 app.include_router(forum_api.router)
 app.include_router(graph_api.router)
+app.include_router(system_api.router)
+app.include_router(ws_api.router)
 
 
 @app.on_event("startup")
