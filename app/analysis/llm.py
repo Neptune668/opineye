@@ -63,6 +63,12 @@ class HttpLLMClient:
         }
         headers = {"Authorization": f"Bearer {self._api_key}"}
         resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        if resp.status_code >= 400:
+            # 记录接口返回的错误详情，便于定位 400/401/429 等真实原因（默认异常不含 body）。
+            logger.warning(
+                "LLM 接口调用失败",
+                extra={"status": resp.status_code, "body": resp.text[:500]},
+            )
         resp.raise_for_status()
         data = resp.json()
         return data["choices"][0]["message"]["content"]

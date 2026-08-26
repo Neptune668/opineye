@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 from typing import Any
 
 from fastapi import WebSocket
@@ -84,9 +85,14 @@ class ConnectionManager:
             future = asyncio.run_coroutine_threadsafe(
                 self.broadcast({"type": event.type, "payload": event.payload}), loop
             )
-            try:
-                future.result(timeout=5)
-            except Exception:  # noqa: BLE001 - 广播失败不影响主流程
-                logger.exception("WebSocket 广播异常", extra={"event_type": event.type})
+
+            def _log_on_done(fut: concurrent.futures.Future) -> None:
+                # 广播尽力而为：失败仅记录日志，绝不阻塞事件发布方（同步路由线程）。
+                try:
+                    fut.result()
+                except Exception:  # noqa: BLE001
+                    logger.warning("WebSocket 广播失败", extra={"event_type": event.type})
+
+            future.add_done_callback(_log_on_done)
 
         return handler
