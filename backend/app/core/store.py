@@ -16,8 +16,8 @@ from typing import Any
 
 from filelock import FileLock
 
-from app.config import DEFAULT_CONFIG, load_config
-from app.settings import CONFIG_PATH, REQUIRED_DIRS
+from app import settings
+from app.config import DEFAULT_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +31,12 @@ def _lock_path(path: Path) -> Path:
 
 def ensure_data_dirs() -> None:
     """确保 DATA_ROOT 下必要目录存在，config.json 不存在则写入默认模板。"""
-    for d in REQUIRED_DIRS:
+    for d in settings.REQUIRED_DIRS:
         d.mkdir(parents=True, exist_ok=True)
 
-    if not CONFIG_PATH.exists():
-        write_json(CONFIG_PATH, DEFAULT_CONFIG)
-        logger.info("已生成默认配置 %s", CONFIG_PATH)
+    if not settings.CONFIG_PATH.exists():
+        write_json(settings.CONFIG_PATH, DEFAULT_CONFIG)
+        logger.info("已生成默认配置 %s", settings.CONFIG_PATH)
 
 
 def read_json(path: Path, default: Any = None) -> Any:
@@ -79,3 +79,30 @@ def append_log(path: Path, line: str) -> None:
             if not line.endswith("\n"):
                 f.write("\n")
             f.flush()
+
+
+def write_text(path: Path, text: str) -> None:
+    """原子写文本文件（临时文件 + os.replace）。"""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        with FileLock(str(_lock_path(path))):
+            os.replace(tmp_name, path)
+    except Exception:
+        if os.path.exists(tmp_name):
+            os.remove(tmp_name)
+        raise
+
+
+def read_text(path: Path, default: str = "") -> str:
+    """读取文本文件，不存在返回 default。"""
+    if not path.exists():
+        return default
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()

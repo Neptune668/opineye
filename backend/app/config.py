@@ -10,7 +10,7 @@ import json
 import logging
 from typing import Any
 
-from app.settings import CONFIG_PATH
+from app import settings
 
 logger = logging.getLogger(__name__)
 
@@ -46,16 +46,16 @@ def _deep_merge(base: dict, override: dict) -> dict:
 def load_config() -> dict[str, Any]:
     """从磁盘读取配置，失败时回退默认值（不抛出异常）。"""
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(settings.CONFIG_PATH, "r", encoding="utf-8") as f:
             raw = json.load(f)
         if not isinstance(raw, dict):
             raise ValueError("config.json 顶层必须为对象")
         # 用默认值补齐缺失字段
         return _deep_merge(DEFAULT_CONFIG, raw)
     except FileNotFoundError:
-        logger.warning("配置文件 %s 不存在，使用默认配置", CONFIG_PATH)
+        logger.warning("配置文件 %s 不存在，使用默认配置", settings.CONFIG_PATH)
     except (json.JSONDecodeError, ValueError) as exc:
-        logger.warning("配置文件 %s 损坏，回退默认配置：%s", CONFIG_PATH, exc)
+        logger.warning("配置文件 %s 损坏，回退默认配置：%s", settings.CONFIG_PATH, exc)
     return copy.deepcopy(DEFAULT_CONFIG)
 
 

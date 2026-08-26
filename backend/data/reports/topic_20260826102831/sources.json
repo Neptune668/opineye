@@ -1,0 +1,98 @@
+{
+  "report_id": "topic_20260826102831",
+  "topic": "某产品发布",
+  "executed_at": "2026-08-26T10:28:31.851221",
+  "source_types": [
+    "news",
+    "forum_post",
+    "internal_data"
+  ],
+  "source_summary": [
+    {
+      "source_type": "news",
+      "count": 3
+    },
+    {
+      "source_type": "forum_post",
+      "count": 3
+    },
+    {
+      "source_type": "internal_data",
+      "count": 3
+    }
+  ],
+  "items": [
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "【news】关于「某产品发布」的来源样本",
+      "text": "多家媒体关注「某产品发布」，报道总体正面，公众普遍支持并认可其进展。",
+      "url": "https://example.com/news/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850633"
+    },
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "【news】关于「某产品发布」的来源样本",
+      "text": "多家媒体关注「某产品发布」，报道总体正面，公众普遍支持并认可其进展。",
+      "url": "https://example.com/news/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850802"
+    },
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "【news】关于「某产品发布」的来源样本",
+      "text": "多家媒体关注「某产品发布」，报道总体正面，公众普遍支持并认可其进展。",
+      "url": "https://example.com/news/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850817"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "【forum_post】关于「某产品发布」的来源样本",
+      "text": "论坛用户讨论「某产品发布」，部分网友提出质疑与担忧，存在负面声音。",
+      "url": "https://example.com/forum_post/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850871"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "【forum_post】关于「某产品发布」的来源样本",
+      "text": "论坛用户讨论「某产品发布」，部分网友提出质疑与担忧，存在负面声音。",
+      "url": "https://example.com/forum_post/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850876"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "【forum_post】关于「某产品发布」的来源样本",
+      "text": "论坛用户讨论「某产品发布」，部分网友提出质疑与担忧，存在负面声音。",
+      "url": "https://example.com/forum_post/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850881"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "【internal_data】关于「某产品发布」的来源样本",
+      "text": "内部沉淀数据显示「某产品发布」近期出现风险隐患，需重点关注。",
+      "url": "https://example.com/internal_data/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850895"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "【internal_data】关于「某产品发布」的来源样本",
+      "text": "内部沉淀数据显示「某产品发布」近期出现风险隐患，需重点关注。",
+      "url": "https://example.com/internal_data/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850900"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "【internal_data】关于「某产品发布」的来源样本",
+      "text": "内部沉淀数据显示「某产品发布」近期出现风险隐患，需重点关注。",
+      "url": "https://example.com/internal_data/某产品发布",
+      "collected_at": "2026-08-26T10:28:31.850904"
+    }
+  ]
+}

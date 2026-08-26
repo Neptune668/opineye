@@ -14,6 +14,10 @@ from fastapi.responses import JSONResponse
 from app.core.store import ensure_data_dirs
 from app.api.routes_status import router as status_router
 from app.api.routes_system import router as system_router
+from app.api.routes_search import router as search_router
+from app.api.routes_forum import router as forum_router
+from app.api.routes_graph import router as graph_router
+from app.api.routes_config import router as config_router
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +47,10 @@ app.add_middleware(
 # 挂载路由
 app.include_router(status_router)
 app.include_router(system_router)
+app.include_router(search_router)
+app.include_router(forum_router)
+app.include_router(graph_router)
+app.include_router(config_router)
 
 
 @app.exception_handler(Exception)

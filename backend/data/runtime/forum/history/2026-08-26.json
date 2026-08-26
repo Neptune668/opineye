@@ -1,0 +1,20 @@
+[
+  {
+    "time": "2026-08-26T10:28:37.564174",
+    "event": "collect",
+    "message": "论坛采集任务已启动",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T10:28:37.905833",
+    "event": "collect",
+    "message": "采集到帖子 12 条",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T10:28:38.260339",
+    "event": "stop",
+    "message": "论坛采集任务已停止",
+    "task_status": "stopped"
+  }
+]

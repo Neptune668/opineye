@@ -83,6 +83,9 @@ class ProcessManager:
         script = APPS_DIR / f"{app_name}_app.py"
         if not script.exists():
             logger.error("应用脚本不存在：%s", script)
+            self._procs[app_name] = AppProc(
+                proc=None, status="failed", log_f=None, pump_task=None
+            )
             return False
 
         self._procs[app_name] = AppProc(
