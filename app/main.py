@@ -9,8 +9,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import __version__
 from app.api import apps as apps_api
@@ -44,10 +45,8 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.get("/")
-def index() -> JSONResponse:
+def index() -> FileResponse:
     """控制台首页（前端阶段）。"""
-    from fastapi.responses import FileResponse
-
     return FileResponse(str(STATIC_DIR / "index.html"))
 
 
@@ -63,6 +62,26 @@ async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
     return JSONResponse(
         status_code=exc.http_status,
         content={"code": exc.code, "message": exc.message, "data": None},
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_error_handler(_: Request, exc: StarletteHTTPException) -> JSONResponse:
+    """HTTP 异常统一响应（404/405 等路由级错误）。"""
+    code = 1002 if exc.status_code == 404 else 5001
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"code": code, "message": str(exc.detail), "data": None},
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_error_handler(_: Request, exc: Exception) -> JSONResponse:
+    """未捕获异常兜底，统一返回 500，避免暴露内部细节。"""
+    logger.exception("未处理异常", extra={"error": str(exc)})
+    return JSONResponse(
+        status_code=500,
+        content={"code": 5001, "message": "系统内部错误", "data": None},
     )
 
 

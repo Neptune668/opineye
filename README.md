@@ -5,6 +5,8 @@
 ---
 
 ## 0. 快速开始
+# 1. 激活虚拟环境（注意是 .venv，不是 venv）
+.venv\Scripts\Activate.ps1
 
 ### 0.1 环境要求
 

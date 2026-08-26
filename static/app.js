@@ -1,18 +1,36 @@
 // ===== API 封装 =====
 const API_BASE = '/api';
 
-async function apiGet(path) {
-  const r = await fetch(API_BASE + path);
-  return r.json();
+async function request(method, path, body) {
+  let r;
+  try {
+    r = await fetch(API_BASE + path, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) {
+    // 网络异常
+    throw new Error('无法连接服务器，请检查服务是否启动');
+  }
+  const data = await r.json().catch(() => ({}));
+  if (data.code !== 0) {
+    // 业务异常：抛出带后端 message 的错误
+    throw new Error(data.message || `请求失败（code=${data.code}）`);
+  }
+  return data;
 }
 
-async function apiPost(path, body) {
-  const r = await fetch(API_BASE + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body || {}),
-  });
-  return r.json();
+function apiGet(path) {
+  return request('GET', path);
+}
+function apiPost(path, body) {
+  return request('POST', path, body || {});
+}
+
+// 全局错误提示
+function showError(msg) {
+  alert(msg);
 }
 
 // ===== 工具 =====
@@ -59,22 +77,36 @@ async function loadStatus() {
         <button class="btn primary" onclick="startApp('${name}')">启动</button>
         <button class="btn danger" onclick="stopApp('${name}')">停止</button>
         <button class="btn" onclick="viewOutput('${name}')">输出</button>
+        <button class="btn" onclick="viewTestLog('${name}')">测试日志</button>
       </div>
     </div>
   `).join('');
 }
 
 async function startApp(name) {
-  await apiGet(`/start/${name}`);
-  loadStatus();
+  try {
+    await apiGet(`/start/${name}`);
+    loadStatus();
+  } catch (e) { showError(e.message); }
 }
 async function stopApp(name) {
-  await apiGet(`/stop/${name}`);
-  loadStatus();
+  try {
+    await apiGet(`/stop/${name}`);
+    loadStatus();
+  } catch (e) { showError(e.message); }
 }
 async function viewOutput(name) {
-  const res = await apiGet(`/output/${name}`);
-  alert(`【${name}】输出：\n${res.data?.output_text || '(空)'}`);
+  try {
+    const res = await apiGet(`/output/${name}`);
+    alert(`【${name}】输出：\n${res.data?.output_text || '(空)'}`);
+  } catch (e) { showError(e.message); }
+}
+async function viewTestLog(name) {
+  try {
+    const res = await apiGet(`/test_log/${name}`);
+    const lines = res.data?.lines || [];
+    alert(`【${name}】测试日志（末尾 ${lines.length} 行）：\n${lines.join('\n') || '(空)'}`);
+  } catch (e) { showError(e.message); }
 }
 
 // ===== 主题检索 =====
@@ -82,9 +114,15 @@ $('#btn-search').addEventListener('click', async () => {
   const query = $('#search-query').value.trim();
   const sources = Array.from($('#search-sources').selectedOptions).map((o) => o.value);
   if (!query) { alert('请输入主题词'); return; }
-  const res = await apiPost('/search', { query, source_types: sources });
+  let res;
+  try {
+    res = await apiPost('/search', { query, source_types: sources });
+  } catch (e) {
+    $('#search-result').innerHTML = `<div class="empty">检索失败：${escapeHtml(e.message)}</div>`;
+    return;
+  }
   const d = res.data;
-  if (!d) { $('#search-result').innerHTML = `<div class="empty">检索失败：${res.message}</div>`; return; }
+  if (!d) { $('#search-result').innerHTML = `<div class="empty">检索失败：${escapeHtml(res.message)}</div>`; return; }
 
   const a = d.analysis;
   const senti = a.sentiment;
@@ -107,14 +145,18 @@ $('#btn-search').addEventListener('click', async () => {
 
 // ===== 论坛监控 =====
 $('#btn-forum-start').addEventListener('click', async () => {
-  await apiGet('/forum/start');
-  loadForumLog();
+  try {
+    await apiGet('/forum/start');
+    loadForumLog();
+  } catch (e) { showError(e.message); }
 });
 $('#btn-forum-stop').addEventListener('click', async () => {
-  await apiGet('/forum/stop');
-  loadForumLog();
+  try {
+    await apiGet('/forum/stop');
+    loadForumLog();
+  } catch (e) { showError(e.message); }
 });
-$('#btn-forum-refresh').addEventListener('click', loadForumLog);
+$('#btn-forum-refresh').addEventListener('click', () => { loadForumLog().catch((e) => showError(e.message)); });
 
 async function loadForumLog() {
   const res = await apiGet('/forum/log');
@@ -125,21 +167,40 @@ async function loadForumLog() {
 $('#btn-forum-history').addEventListener('click', async () => {
   const date = $('#forum-date').value;
   if (!date) { alert('请选择日期'); return; }
-  const res = await apiPost('/forum/log/history', { date });
-  const entries = res.data?.entries || [];
-  $('#forum-history').textContent = entries.map((e) => `${e.ts} [${e.event_type}] ${e.message}`).join('\n') || '(无历史日志)';
+  try {
+    const res = await apiPost('/forum/log/history', { date });
+    const entries = res.data?.entries || [];
+    $('#forum-history').textContent = entries.map((e) => `${e.ts} [${e.event_type}] ${e.message}`).join('\n') || '(无历史日志)';
+  } catch (e) { showError(e.message); }
 });
 
 // ===== 图谱查看 =====
 $('#btn-graph-latest').addEventListener('click', async () => {
-  const res = await apiGet('/graph/latest');
-  renderGraph(res.data);
+  try {
+    const res = await apiGet('/graph/latest');
+    renderGraph(res.data);
+  } catch (e) { showError(e.message); }
 });
 $('#btn-graph-load').addEventListener('click', async () => {
   const id = $('#graph-report-id').value.trim();
   if (!id) { alert('请输入 report_id'); return; }
-  const res = await apiGet(`/graph/${id}`);
-  renderGraph(res.data);
+  try {
+    const res = await apiGet(`/graph/${id}`);
+    renderGraph(res.data);
+  } catch (e) { showError(e.message); }
+});
+$('#btn-graph-query').addEventListener('click', async () => {
+  const reportId = $('#graph-query-report').value.trim();
+  const nodeId = $('#graph-query-node').value.trim();
+  const relationType = $('#graph-query-relation').value.trim();
+  if (!reportId) { alert('请输入查询 report_id'); return; }
+  const body = { report_id: reportId };
+  if (nodeId) body.node_id = nodeId;
+  if (relationType) body.relation_type = relationType;
+  try {
+    const res = await apiPost('/graph/query', body);
+    renderGraph(res.data);
+  } catch (e) { showError(e.message); }
 });
 
 function renderGraph(g) {
@@ -161,15 +222,23 @@ function renderGraph(g) {
 
 // ===== 配置管理 =====
 $('#btn-config-load').addEventListener('click', async () => {
-  const res = await apiGet('/config');
-  $('#config-editor').value = JSON.stringify(res.data, null, 2);
+  try {
+    const res = await apiGet('/config');
+    $('#config-editor').value = JSON.stringify(res.data, null, 2);
+  } catch (e) { showError(e.message); }
 });
 $('#btn-config-save').addEventListener('click', async () => {
+  let data;
   try {
-    const data = JSON.parse($('#config-editor').value);
-    const res = await apiPost('/config', data);
-    if (res.code === 0) { alert('保存成功'); } else { alert('保存失败：' + res.message); }
-  } catch (e) { alert('配置 JSON 格式错误：' + e.message); }
+    data = JSON.parse($('#config-editor').value);
+  } catch (e) {
+    showError('配置 JSON 格式错误：' + e.message);
+    return;
+  }
+  try {
+    await apiPost('/config', data);
+    alert('保存成功');
+  } catch (e) { showError('保存失败：' + e.message); }
 });
 
 // ===== 系统状态 =====
@@ -190,12 +259,16 @@ async function loadSystemStatus() {
 
 // 系统启停按钮（首页）
 $('#btn-system-start').addEventListener('click', async () => {
-  await apiPost('/system/start');
-  loadStatus();
+  try {
+    await apiPost('/system/start');
+    loadStatus();
+  } catch (e) { showError(e.message); }
 });
 $('#btn-system-shutdown').addEventListener('click', async () => {
-  await apiPost('/system/shutdown');
-  loadStatus();
+  try {
+    await apiPost('/system/shutdown');
+    loadStatus();
+  } catch (e) { showError(e.message); }
 });
 
 // ===== WebSocket 实时消息 =====
@@ -225,6 +298,6 @@ function initWs() {
 }
 
 // ===== 初始化 =====
-loadStatus();
-loadSystemStatus();
+loadStatus().catch(() => {});
+loadSystemStatus().catch(() => {});
 initWs();
