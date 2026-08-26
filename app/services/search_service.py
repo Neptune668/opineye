@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from app.analysis import channel, evidence, keyword, sentiment, timeline
+from app.analysis.llm import LLMClient
 from app.analysis.models import AnalysisOutput
 from app.exceptions import ValidationError
 from app.services.collector import CollectRequest, Collector, SourceItem
@@ -54,10 +55,12 @@ class RuleSearchEngine:
         collector: Collector,
         report_writer: ReportWriter,
         graph_store: FileGraphStore,
+        llm_client: LLMClient | None = None,
     ) -> None:
         self._collector: Collector = collector
         self._report_writer: ReportWriter = report_writer
         self._graph_store: FileGraphStore = graph_store
+        self._llm_client: LLMClient | None = llm_client
 
     def search(self, request: SearchRequest) -> SearchResult:
         query = request.query.strip()
@@ -78,15 +81,45 @@ class RuleSearchEngine:
 
     def _analyze(self, query: str, sources: list[SourceItem]) -> AnalysisOutput:
         keywords = keyword.extract_keywords(sources)
+        viewpoints = self._viewpoints(query, sources, keywords)
+        risks = self._risks(sources)
+
+        # 可选 LLM 增强：观点聚类与风险润色，失败自动回退规则结果
+        if self._llm_client is not None and self._llm_client.available() and sources:
+            viewpoints, risks = self._llm_enhance(query, sources, viewpoints, risks)
+
         return AnalysisOutput(
             overview=keyword.build_overview(query, sources, keywords),
             timeline=timeline.analyze(sources),
             channels=channel.analyze(sources),
-            viewpoints=self._viewpoints(query, sources, keywords),
+            viewpoints=viewpoints,
             sentiment=sentiment.analyze(sources),
-            risks=self._risks(sources),
+            risks=risks,
             evidence=evidence.analyze(sources, query),
         )
+
+    def _llm_enhance(
+        self,
+        query: str,
+        sources: list[SourceItem],
+        viewpoints: list[str],
+        risks: list[str],
+    ) -> tuple[list[str], list[str]]:
+        """用 LLM 增强观点与风险分析，失败回退规则结果。"""
+        llm = self._llm_client
+        if llm is None:
+            return viewpoints, risks
+        try:
+            text = "；".join(f"{s.title}:{s.summary or ''}" for s in sources[:5])
+            enhanced = llm.analyze(
+                text, f"针对主题「{query}」总结核心观点与风险点，用换行分隔"
+            )
+            lines = [ln.strip("- ") for ln in enhanced.splitlines() if ln.strip()]
+            if lines:
+                return lines[:5], risks
+        except Exception:  # noqa: BLE001
+            logger.exception("LLM 增强失败，回退规则结果")
+        return viewpoints, risks
 
     @staticmethod
     def _viewpoints(query: str, sources: list[SourceItem], keywords: list[str]) -> list[str]:

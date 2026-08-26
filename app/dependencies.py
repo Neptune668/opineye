@@ -9,6 +9,7 @@ from functools import lru_cache
 
 from app.events.base import EventBus
 from app.events.memory_bus import MemoryEventBus
+from app.analysis.llm import build_llm_client
 from app.services.collector import (
     Collector,
     CompositeCollector,
@@ -88,11 +89,12 @@ def get_graph_store() -> FileGraphStore:
 
 @lru_cache
 def get_search_engine() -> SearchEngine:
-    """返回检索分析引擎（T7 交付，规则模式）。"""
+    """返回检索分析引擎（T7 交付，规则模式，T12 可选 LLM 增强）。"""
     return RuleSearchEngine(
         collector=get_collector(),
         report_writer=get_report_writer(),
         graph_store=get_graph_store(),
+        llm_client=build_llm_client(),
     )
 
 
