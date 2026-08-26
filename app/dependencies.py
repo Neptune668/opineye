@@ -10,6 +10,8 @@ from functools import lru_cache
 from app.events.base import EventBus
 from app.events.memory_bus import MemoryEventBus
 from app.services.config_service import ConfigService, JsonConfigService
+from app.services.process_manager import InMemoryProcessManager, ProcessManager
+from app.tasks.registry import AppRegistry
 
 
 @lru_cache
@@ -22,3 +24,15 @@ def get_event_bus() -> EventBus:
 def get_config_service() -> ConfigService:
     """返回进程内单例配置服务（T3 交付）。"""
     return JsonConfigService()
+
+
+@lru_cache
+def get_app_registry() -> AppRegistry:
+    """返回应用注册表单例（T4 交付）。"""
+    return AppRegistry()
+
+
+@lru_cache
+def get_process_manager() -> ProcessManager:
+    """返回进程内单例进程管理器（T4 交付，内存实现）。"""
+    return InMemoryProcessManager(registry=get_app_registry(), event_bus=get_event_bus())

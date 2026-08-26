@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app import __version__
+from app.api import apps as apps_api
 from app.api import config as config_api
 from app.exceptions import AppError
 from app.utils.logging import get_logger
@@ -20,6 +21,7 @@ logger = get_logger(__name__)
 app = FastAPI(title="opineye", version=__version__)
 
 app.include_router(config_api.router)
+app.include_router(apps_api.router)
 
 
 @app.on_event("startup")
