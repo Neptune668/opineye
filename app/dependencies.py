@@ -50,3 +50,19 @@ def get_process_manager() -> ProcessManager:
 def get_app_output_reader() -> AppOutputReader:
     """返回进程内单例应用输出读取器（T5 交付）。"""
     return FileAppOutputReader()
+
+
+@lru_cache
+def get_collector() -> Collector:
+    """返回组合采集器（T6 交付）。
+
+    internal_data 为真实离线采集，其余来源为占位适配器。
+    """
+    collectors: dict[str, Collector] = {
+        SourceType.INTERNAL_DATA.value: InternalDataCollector(),
+        SourceType.NEWS.value: PlaceholderCollector(SourceType.NEWS.value),
+        SourceType.IMAGE.value: PlaceholderCollector(SourceType.IMAGE.value),
+        SourceType.VIDEO.value: PlaceholderCollector(SourceType.VIDEO.value),
+        SourceType.FORUM_POST.value: PlaceholderCollector(SourceType.FORUM_POST.value),
+    }
+    return CompositeCollector(collectors)
