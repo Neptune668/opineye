@@ -45,17 +45,19 @@ function escapeHtml(s) {
 // ===== 页面导航 =====
 const PAGES = ['console', 'search', 'forum', 'graph', 'config', 'system'];
 
-document.querySelectorAll('.nav-item').forEach((item) => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
-    item.classList.add('active');
-    const page = item.dataset.page;
-    document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
-    $('#page-' + page).classList.add('active');
-    // 进入页面时刷新数据
-    if (page === 'console' || page === 'system') loadStatus();
-    if (page === 'forum') loadForumLog();
+function showPage(page) {
+  document.querySelectorAll('.nav-item').forEach((n) => {
+    n.classList.toggle('active', n.dataset.page === page);
   });
+  document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
+  $('#page-' + page).classList.add('active');
+  // 进入页面时刷新数据
+  if (page === 'console' || page === 'system') { loadStatus(); loadSystemStatus(); }
+  if (page === 'forum') loadForumLog();
+}
+
+document.querySelectorAll('.nav-item').forEach((item) => {
+  item.addEventListener('click', () => showPage(item.dataset.page));
 });
 
 // ===== 控制台首页 =====
@@ -175,19 +177,25 @@ $('#btn-forum-history').addEventListener('click', async () => {
 });
 
 // ===== 图谱查看 =====
-$('#btn-graph-latest').addEventListener('click', async () => {
+async function loadLatestGraph() {
   try {
     const res = await apiGet('/graph/latest');
     renderGraph(res.data);
   } catch (e) { showError(e.message); }
-});
-$('#btn-graph-load').addEventListener('click', async () => {
-  const id = $('#graph-report-id').value.trim();
-  if (!id) { alert('请输入 report_id'); return; }
+}
+
+async function loadGraphByReport(reportId) {
   try {
-    const res = await apiGet(`/graph/${id}`);
+    const res = await apiGet(`/graph/${reportId}`);
     renderGraph(res.data);
   } catch (e) { showError(e.message); }
+}
+
+$('#btn-graph-latest').addEventListener('click', loadLatestGraph);
+$('#btn-graph-load').addEventListener('click', () => {
+  const id = $('#graph-report-id').value.trim();
+  if (!id) { alert('请输入 report_id'); return; }
+  loadGraphByReport(id);
 });
 $('#btn-graph-query').addEventListener('click', async () => {
   const reportId = $('#graph-query-report').value.trim();
@@ -294,10 +302,39 @@ function initWs() {
     if (msg.type === 'forum_log') {
       loadForumLog();
     }
+    if (msg.type === 'app_output') {
+      // 应用输出：控制台输出摘要（可扩展为滚动日志）
+      console.log('[app_output]', msg.payload.app_name, msg.payload.output_text);
+    }
+    if (msg.type === 'graph_ready') {
+      // 图谱就绪：自动加载最新图谱
+      console.log('[graph_ready]', msg.payload.report_id);
+      loadGraphByReport(msg.payload.report_id);
+    }
+    if (msg.type === 'error') {
+      console.error('[error]', msg.payload.module_name, msg.payload.error_message);
+    }
   };
 }
 
 // ===== 初始化 =====
 loadStatus().catch(() => {});
 loadSystemStatus().catch(() => {});
+
+// 解析 URL 路径：支持 /graph-viewer 与 /graph-viewer/{report_id}
+function handleGraphViewerRoute() {
+  const m = location.pathname.match(/^\/graph-viewer(?:\/([^/]+))?/);
+  if (!m) return;
+  showPage('graph');
+  if (m[1]) {
+    // 指定 report_id
+    $('#graph-report-id').value = m[1];
+    loadGraphByReport(m[1]);
+  } else {
+    // 无 report_id，加载最新图谱
+    loadLatestGraph();
+  }
+}
+
 initWs();
+handleGraphViewerRoute();

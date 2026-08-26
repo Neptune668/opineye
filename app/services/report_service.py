@@ -147,7 +147,10 @@ class MarkdownReportWriter:
         overall = a.sentiment.overall
         if not a.evidence and not a.timeline:
             return f"针对主题「{topic}」暂未获得充分数据，建议扩大采集范围或补充数据源后重新分析。"
+        # 结论绑定来源引用（D2）：列出重点证据的 ref 标识，保证结论可追溯
+        refs = "、".join(ev.ref for ev in a.evidence if ev.ref) or "无"
         return (
             f"综合来看，主题「{topic}」的整体情绪倾向为「{overall}」，"
-            f"共采集 {len(a.evidence)} 条重点证据。建议持续关注相关风险点，并结合时间线走势制定应对策略。"
+            f"共采集 {len(a.evidence)} 条重点证据（来源引用：{refs}）。"
+            f"建议持续关注相关风险点，并结合时间线走势制定应对策略。"
         )

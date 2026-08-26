@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import threading
+import time
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -18,6 +19,7 @@ from app.exceptions import InvalidStateError, NotFoundError
 from app.tasks.registry import AppRegistry
 from app.utils.constants import AppState
 from app.utils.logging import get_logger
+from app.utils.storage import RUNTIME_DIR
 
 logger = get_logger(__name__)
 
@@ -126,7 +128,26 @@ class InMemoryProcessManager:
         self._event_bus.publish(
             DomainEvent(type=EventType.APP_STATUS, payload={"app_name": app_name, "status": new_state.value})
         )
+        self._write_log(app_name, new_state, error)
         logger.info("应用状态变更", extra={"app": app_name, "status": new_state.value})
+
+    def _write_log(self, app_name: str, state: AppState, error: str | None) -> None:
+        """将应用状态/错误输出写入 runtime/apps/{app_name}.log（D1）。
+
+        格式：时间 [状态] 消息（错误信息若存在则追加）。
+        """
+        try:
+            log_path = RUNTIME_DIR / "apps" / f"{app_name}.log"
+            ts = time.strftime("%Y-%m-%d %H:%M:%S")
+            msg = f"{ts} [状态:{state.value}]"
+            if error:
+                msg += f" 错误:{error}"
+            msg += "\n"
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            with log_path.open("a", encoding="utf-8") as f:
+                f.write(msg)
+        except Exception:  # noqa: BLE001 - 日志写入失败不影响主流程
+            logger.exception("应用日志写入失败", extra={"app": app_name})
 
     def _publish_output(self, app_name: str, output_text: str) -> None:
         """发布 app_output 事件（G3 选项1：启停状态说明）。"""
