@@ -1,0 +1,69 @@
+{
+  "report_id": "topic_20260826113147",
+  "topic": "多媒体内容示例",
+  "executed_at": "2026-08-26T11:31:47.109223",
+  "source_types": [
+    "image",
+    "video"
+  ],
+  "source_summary": [
+    {
+      "source_type": "image",
+      "count": 3
+    },
+    {
+      "source_type": "video",
+      "count": 3
+    }
+  ],
+  "items": [
+    {
+      "source_type": "image",
+      "group": "多媒体",
+      "title": "【image】关于「多媒体内容示例」的来源样本",
+      "text": "关于「多媒体内容示例」的图片内容在社交平台传播，评论区好评如潮。",
+      "url": "https://example.com/image/多媒体内容示例",
+      "collected_at": "2026-08-26T11:31:47.109024"
+    },
+    {
+      "source_type": "image",
+      "group": "多媒体",
+      "title": "【image】关于「多媒体内容示例」的来源样本",
+      "text": "关于「多媒体内容示例」的图片内容在社交平台传播，评论区好评如潮。",
+      "url": "https://example.com/image/多媒体内容示例",
+      "collected_at": "2026-08-26T11:31:47.109059"
+    },
+    {
+      "source_type": "image",
+      "group": "多媒体",
+      "title": "【image】关于「多媒体内容示例」的来源样本",
+      "text": "关于「多媒体内容示例」的图片内容在社交平台传播，评论区好评如潮。",
+      "url": "https://example.com/image/多媒体内容示例",
+      "collected_at": "2026-08-26T11:31:47.109063"
+    },
+    {
+      "source_type": "video",
+      "group": "多媒体",
+      "title": "【video】关于「多媒体内容示例」的来源样本",
+      "text": "「多媒体内容示例」相关视频播放量较高，观众表达满意与喜爱。",
+      "url": "https://example.com/video/多媒体内容示例",
+      "collected_at": "2026-08-26T11:31:47.109074"
+    },
+    {
+      "source_type": "video",
+      "group": "多媒体",
+      "title": "【video】关于「多媒体内容示例」的来源样本",
+      "text": "「多媒体内容示例」相关视频播放量较高，观众表达满意与喜爱。",
+      "url": "https://example.com/video/多媒体内容示例",
+      "collected_at": "2026-08-26T11:31:47.109076"
+    },
+    {
+      "source_type": "video",
+      "group": "多媒体",
+      "title": "【video】关于「多媒体内容示例」的来源样本",
+      "text": "「多媒体内容示例」相关视频播放量较高，观众表达满意与喜爱。",
+      "url": "https://example.com/video/多媒体内容示例",
+      "collected_at": "2026-08-26T11:31:47.109078"
+    }
+  ]
+}

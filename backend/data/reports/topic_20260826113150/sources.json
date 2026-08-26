@@ -1,0 +1,98 @@
+{
+  "report_id": "topic_20260826113150",
+  "topic": "舆情分析示例主题",
+  "executed_at": "2026-08-26T11:31:50.258284",
+  "source_types": [
+    "news",
+    "forum_post",
+    "internal_data"
+  ],
+  "source_summary": [
+    {
+      "source_type": "news",
+      "count": 3
+    },
+    {
+      "source_type": "forum_post",
+      "count": 3
+    },
+    {
+      "source_type": "internal_data",
+      "count": 3
+    }
+  ],
+  "items": [
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "【news】关于「舆情分析示例主题」的来源样本",
+      "text": "多家媒体关注「舆情分析示例主题」，报道总体正面，公众普遍支持并认可其进展。",
+      "url": "https://example.com/news/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258028"
+    },
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "【news】关于「舆情分析示例主题」的来源样本",
+      "text": "多家媒体关注「舆情分析示例主题」，报道总体正面，公众普遍支持并认可其进展。",
+      "url": "https://example.com/news/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258065"
+    },
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "【news】关于「舆情分析示例主题」的来源样本",
+      "text": "多家媒体关注「舆情分析示例主题」，报道总体正面，公众普遍支持并认可其进展。",
+      "url": "https://example.com/news/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258068"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "【forum_post】关于「舆情分析示例主题」的来源样本",
+      "text": "论坛用户讨论「舆情分析示例主题」，部分网友提出质疑与担忧，存在负面声音。",
+      "url": "https://example.com/forum_post/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258078"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "【forum_post】关于「舆情分析示例主题」的来源样本",
+      "text": "论坛用户讨论「舆情分析示例主题」，部分网友提出质疑与担忧，存在负面声音。",
+      "url": "https://example.com/forum_post/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258080"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "【forum_post】关于「舆情分析示例主题」的来源样本",
+      "text": "论坛用户讨论「舆情分析示例主题」，部分网友提出质疑与担忧，存在负面声音。",
+      "url": "https://example.com/forum_post/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258081"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "【internal_data】关于「舆情分析示例主题」的来源样本",
+      "text": "内部沉淀数据显示「舆情分析示例主题」近期出现风险隐患，需重点关注。",
+      "url": "https://example.com/internal_data/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258086"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "【internal_data】关于「舆情分析示例主题」的来源样本",
+      "text": "内部沉淀数据显示「舆情分析示例主题」近期出现风险隐患，需重点关注。",
+      "url": "https://example.com/internal_data/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258088"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "【internal_data】关于「舆情分析示例主题」的来源样本",
+      "text": "内部沉淀数据显示「舆情分析示例主题」近期出现风险隐患，需重点关注。",
+      "url": "https://example.com/internal_data/舆情分析示例主题",
+      "collected_at": "2026-08-26T11:31:50.258092"
+    }
+  ]
+}

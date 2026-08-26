@@ -8,5 +8,45 @@
 
 [search] 处理批次 3
 
-[search] 检索应用正常退出
+[search] 主题检索应用已启动
+
+[search] 等待检索任务...（示例输出）
+
+[search] 处理批次 1
+
+[search] 处理批次 2
+
+[search] 处理批次 3
+
+[search] 开始检索主题：舆情分析示例主题
+
+[search] 来源类型：news, forum_post, internal_data
+
+[search] 检索完成，来源条目 9 条
+
+[search] 情绪整体判断：负向
+
+[search] 报告已生成：topic_20260826113143
+
+[search] 图谱已生成：D:\project\vscode\opineye2\backend\data\graphs\topic_20260826113143\graph.json
+
+[search] 图谱节点数：10，关系数：9
+
+[search] 检索分析流水线执行完成
+
+[search] 开始检索主题：舆情分析示例主题
+
+[search] 来源类型：news, forum_post, internal_data
+
+[search] 检索完成，来源条目 9 条
+
+[search] 情绪整体判断：负向
+
+[search] 报告已生成：topic_20260826113150
+
+[search] 图谱已生成：D:\project\vscode\opineye2\backend\data\graphs\topic_20260826113150\graph.json
+
+[search] 图谱节点数：10，关系数：9
+
+[search] 检索分析流水线执行完成
 

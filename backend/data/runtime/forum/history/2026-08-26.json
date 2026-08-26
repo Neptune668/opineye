@@ -52,5 +52,41 @@
     "event": "stop",
     "message": "论坛采集任务已停止",
     "task_status": "stopped"
+  },
+  {
+    "time": "2026-08-26T11:31:56.155512",
+    "event": "collect",
+    "message": "论坛采集任务已启动",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T11:31:56.769963",
+    "event": "collect",
+    "message": "采集到帖子 12 条",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T11:31:59.791522",
+    "event": "stop",
+    "message": "论坛采集任务已停止",
+    "task_status": "stopped"
+  },
+  {
+    "time": "2026-08-26T11:32:03.302039",
+    "event": "collect",
+    "message": "论坛采集任务已启动",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T11:32:03.909404",
+    "event": "collect",
+    "message": "采集到帖子 12 条",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T11:32:06.934792",
+    "event": "stop",
+    "message": "论坛采集任务已停止",
+    "task_status": "stopped"
   }
 ]

@@ -6,8 +6,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+
+# Windows 上 asyncio 子进程需要 ProactorEventLoop（SelectorEventLoop 不支持 subprocess）
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware

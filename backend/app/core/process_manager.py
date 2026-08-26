@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import re
 import signal
 import sys
@@ -166,12 +167,22 @@ class ProcessManager:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_f = open(log_path, "a", encoding="utf-8")
 
+        # 注入 PYTHONPATH，确保 worker 脚本能 import app 模块
+        env = dict(os.environ)
+        existing_path = env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = (
+            f"{settings.BACKEND_DIR}{os.pathsep}{existing_path}"
+            if existing_path
+            else str(settings.BACKEND_DIR)
+        )
+
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
             str(settings.APPS_DIR / f"{app_name}_app.py"),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,  # 错误合并进标准输出
             cwd=str(settings.BACKEND_DIR),
+            env=env,
         )
 
         async def _pump():

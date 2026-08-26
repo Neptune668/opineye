@@ -1,0 +1,48 @@
+[report] 报告生成应用已启动
+
+[report] 生成主题「舆情分析示例主题」的 8 段式报告...
+
+[report] 报告编号：topic_20260826113150
+
+[report]  - 事件概述
+
+[report]  - 时间线
+
+[report]  - 传播渠道
+
+[report]  - 主要观点
+
+[report]  - 情绪倾向
+
+[report]  - 风险判断
+
+[report]  - 重点证据
+
+[report]  - 结论摘要
+
+[report] 报告生成完成
+
+[report] 报告生成应用已启动
+
+[report] 生成主题「多媒体内容示例」的 8 段式报告...
+
+[report] 报告编号：topic_20260826113154
+
+[report]  - 事件概述
+
+[report]  - 时间线
+
+[report]  - 传播渠道
+
+[report]  - 主要观点
+
+[report]  - 情绪倾向
+
+[report]  - 风险判断
+
+[report]  - 重点证据
+
+[report]  - 结论摘要
+
+[report] 报告生成完成
+

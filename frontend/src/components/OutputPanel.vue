@@ -18,43 +18,70 @@ watch(
 
 <template>
   <div class="output-panel">
-    <div class="output-header">{{ title || '输出' }}</div>
+    <div class="output-header">
+      <span class="header-title">{{ title || '输出' }}</span>
+      <span class="header-count">{{ lines.length }} 行</span>
+    </div>
     <div ref="container" class="output-body">
       <pre v-if="lines.length">{{ lines.join('\n') }}</pre>
-      <div v-else class="empty">暂无输出</div>
+      <div v-else class="empty">
+        <span class="empty-icon">⌁</span>
+        <span>暂无输出</span>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .output-panel {
-  border: 1px solid #e5e5e5;
-  border-radius: 4px;
+  border: 1px solid #eef1f6;
+  border-radius: 10px;
   overflow: hidden;
 }
 .output-header {
-  padding: 8px 12px;
-  background: #f7f7f7;
+  padding: 10px 14px;
+  background: #fafbfc;
+  border-bottom: 1px solid #eef1f6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-title {
+  font-size: 13px;
   font-weight: 500;
-  border-bottom: 1px solid #e5e5e5;
+  color: #4b5563;
+}
+.header-count {
+  font-size: 12px;
+  color: #9ca3af;
 }
 .output-body {
-  height: 240px;
+  height: 300px;
   overflow-y: auto;
-  padding: 12px;
-  background: #1e1e1e;
+  padding: 14px;
+  background: #1a1d27;
 }
 .output-body pre {
   margin: 0;
   color: #d4d4d4;
-  font-family: monospace;
+  font-family: 'Consolas', 'Monaco', monospace;
   font-size: 12px;
+  line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-all;
 }
 .empty {
-  color: #888;
-  text-align: center;
-  padding: 20px 0;
+  color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  font-size: 13px;
+}
+.empty-icon {
+  font-size: 24px;
+  opacity: 0.5;
 }
 </style>
