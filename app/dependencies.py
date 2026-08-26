@@ -18,6 +18,7 @@ from app.services.collector import (
 from app.services.config_service import ConfigService, JsonConfigService
 from app.services.output_service import AppOutputReader, FileAppOutputReader
 from app.services.process_manager import InMemoryProcessManager, ProcessManager
+from app.services.search_service import RuleSearchEngine, SearchEngine
 from app.tasks.registry import AppRegistry
 from app.utils.constants import SourceType
 
@@ -66,3 +67,9 @@ def get_collector() -> Collector:
         SourceType.FORUM_POST.value: PlaceholderCollector(SourceType.FORUM_POST.value),
     }
     return CompositeCollector(collectors)
+
+
+@lru_cache
+def get_search_engine() -> SearchEngine:
+    """返回检索分析引擎（T7 交付，规则模式）。"""
+    return RuleSearchEngine(collector=get_collector())
