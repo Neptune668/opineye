@@ -15,6 +15,8 @@ from app.analysis import channel, evidence, keyword, sentiment, timeline
 from app.analysis.models import AnalysisOutput
 from app.exceptions import ValidationError
 from app.services.collector import CollectRequest, Collector, SourceItem
+from app.services.graph_builder import build_graph
+from app.services.graph_service import FileGraphStore
 from app.services.report_service import ReportMeta, ReportWriter
 from app.utils.logging import get_logger
 
@@ -47,9 +49,15 @@ class RuleSearchEngine:
     检索流程内同步生成报告（方案 A）。
     """
 
-    def __init__(self, collector: Collector, report_writer: ReportWriter) -> None:
+    def __init__(
+        self,
+        collector: Collector,
+        report_writer: ReportWriter,
+        graph_store: FileGraphStore,
+    ) -> None:
         self._collector: Collector = collector
         self._report_writer: ReportWriter = report_writer
+        self._graph_store: FileGraphStore = graph_store
 
     def search(self, request: SearchRequest) -> SearchResult:
         query = request.query.strip()
@@ -63,6 +71,9 @@ class RuleSearchEngine:
         analysis = self._analyze(query, sources)
         # 方案 A：检索内同步生成报告
         report = self._report_writer.write(analysis, query)
+        # 同步生成图谱
+        graph = build_graph(report.report_id, query, analysis)
+        self._graph_store.save(graph)
         return SearchResult(task_id=task_id, sources=sources, analysis=analysis, report=report)
 
     def _analyze(self, query: str, sources: list[SourceItem]) -> AnalysisOutput:
