@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, Depends
 
+from app.api.deps import require_user
 from app.dependencies import get_search_engine
 from app.services.search_service import SearchEngine, SearchRequest
 
@@ -18,7 +19,11 @@ class SearchBody(BaseModel):
 
 
 @router.post("/search")
-def search(body: SearchBody, engine: SearchEngine = Depends(get_search_engine)) -> dict:
+def search(
+    body: SearchBody,
+    engine: SearchEngine = Depends(get_search_engine),
+    _: object = Depends(require_user),
+) -> dict:
     result = engine.search(SearchRequest(query=body.query, source_types=body.source_types))
     return {
         "code": 0,

@@ -1,9 +1,13 @@
-"""单功能应用启停路由：/api/status、/api/start/{app_name}、/api/stop/{app_name}。"""
+"""单功能应用启停路由：/api/status、/api/start/{app_name}、/api/stop/{app_name}。
+
+权限：status 允许 user 及以上；start/stop 仅 root。
+"""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
+from app.api.deps import require_admin, require_user
 from app.dependencies import get_process_manager
 from app.services.process_manager import ProcessManager
 
@@ -18,13 +22,20 @@ def _status_to_dict(st: dict) -> dict:
 
 
 @router.get("/status")
-def get_status(pm: ProcessManager = Depends(get_process_manager)) -> dict:
+def get_status(
+    pm: ProcessManager = Depends(get_process_manager),
+    _: object = Depends(require_user),
+) -> dict:
     st = pm.status()
     return {"code": 0, "message": "success", "data": _status_to_dict(st)}
 
 
 @router.get("/start/{app_name}")
-def start_app(app_name: str, pm: ProcessManager = Depends(get_process_manager)) -> dict:
+def start_app(
+    app_name: str,
+    pm: ProcessManager = Depends(get_process_manager),
+    _: object = Depends(require_admin),
+) -> dict:
     st = pm.start(app_name)
     return {
         "code": 0,
@@ -34,7 +45,11 @@ def start_app(app_name: str, pm: ProcessManager = Depends(get_process_manager)) 
 
 
 @router.get("/stop/{app_name}")
-def stop_app(app_name: str, pm: ProcessManager = Depends(get_process_manager)) -> dict:
+def stop_app(
+    app_name: str,
+    pm: ProcessManager = Depends(get_process_manager),
+    _: object = Depends(require_admin),
+) -> dict:
     st = pm.stop(app_name)
     return {
         "code": 0,

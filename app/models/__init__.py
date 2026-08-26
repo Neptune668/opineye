@@ -5,6 +5,7 @@ from app.models.forum import ForumLog
 from app.models.graph import GraphEdge, GraphNode
 from app.models.report import Report
 from app.models.search import SearchTask, Source
+from app.models.user import User
 
 __all__ = [
     "Base",
@@ -17,4 +18,5 @@ __all__ = [
     "GraphNode",
     "GraphEdge",
     "ForumLog",
+    "User",
 ]

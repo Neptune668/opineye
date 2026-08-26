@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends
 
+from app.api.deps import require_user
 from app.dependencies import get_graph_store
 from app.services.graph_service import FileGraphStore, GraphData
 
@@ -33,17 +34,28 @@ def _serialize(g: GraphData) -> dict:
 
 
 @router.get("/latest")
-def latest(store: FileGraphStore = Depends(get_graph_store)) -> dict:
+def latest(
+    store: FileGraphStore = Depends(get_graph_store),
+    _: object = Depends(require_user),
+) -> dict:
     return {"code": 0, "message": "success", "data": _serialize(store.latest())}
 
 
 @router.get("/{report_id}")
-def get_graph(report_id: str, store: FileGraphStore = Depends(get_graph_store)) -> dict:
+def get_graph(
+    report_id: str,
+    store: FileGraphStore = Depends(get_graph_store),
+    _: object = Depends(require_user),
+) -> dict:
     return {"code": 0, "message": "success", "data": _serialize(store.load(report_id))}
 
 
 @router.post("/query")
-def query(body: QueryBody, store: FileGraphStore = Depends(get_graph_store)) -> dict:
+def query(
+    body: QueryBody,
+    store: FileGraphStore = Depends(get_graph_store),
+    _: object = Depends(require_user),
+) -> dict:
     cond = {}
     if body.node_id:
         cond["node_id"] = body.node_id

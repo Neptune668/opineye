@@ -15,6 +15,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import __version__
 from app.api import apps as apps_api
+from app.api import auth as auth_api
 from app.api import config as config_api
 from app.api import forum as forum_api
 from app.api import graph as graph_api
@@ -30,6 +31,7 @@ logger = get_logger(__name__)
 
 app = FastAPI(title="opineye", version=__version__)
 
+app.include_router(auth_api.router)
 app.include_router(config_api.router)
 app.include_router(apps_api.router)
 app.include_router(output_api.router)
@@ -65,6 +67,13 @@ def graph_viewer_by_report(report_id: str) -> FileResponse:
 @app.on_event("startup")
 def _startup() -> None:
     ensure_dirs()
+    # 初始化内置 root 管理员（若不存在）
+    try:
+        from app.services.user_init import ensure_root_user
+
+        ensure_root_user()
+    except Exception:  # noqa: BLE001 - root 初始化失败不阻断启动
+        logger.exception("root 管理员初始化失败")
     logger.info("应用启动", extra={"version": __version__})
 
 
