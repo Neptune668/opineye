@@ -1,0 +1,33 @@
+{
+  "system": {
+    "name": "舆情分析平台",
+    "default_apps": [
+      "search",
+      "media",
+      "forum",
+      "insight",
+      "report"
+    ]
+  },
+  "collection": {
+    "forum": {
+      "interval_seconds": 300,
+      "max_pages": 10
+    },
+    "default_source_types": [
+      "news",
+      "image",
+      "video",
+      "forum_post",
+      "internal_data"
+    ]
+  },
+  "analysis": {
+    "insight_enabled": true,
+    "sentiment_mode": "rule_based"
+  },
+  "runtime": {
+    "log_level": "INFO",
+    "output_retention_days": 30
+  }
+}

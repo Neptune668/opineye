@@ -4,11 +4,11 @@
 """
 from pathlib import Path
 
-# 项目根（backend/ 的上一级）
-PROJECT_DIR = Path(__file__).resolve().parent.parent
+# 后端目录（settings.py 位于 backend/app/settings.py，parent.parent 即 backend/）
+BACKEND_DIR = Path(__file__).resolve().parent.parent
 
-# 后端目录
-BACKEND_DIR = PROJECT_DIR / "backend"
+# 项目根（backend/ 的上一级）
+PROJECT_DIR = BACKEND_DIR.parent
 
 # 单功能应用 worker 脚本目录
 APPS_DIR = BACKEND_DIR / "apps"

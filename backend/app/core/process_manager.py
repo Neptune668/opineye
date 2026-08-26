@@ -16,7 +16,7 @@ import signal
 import sys
 from typing import IO
 
-from app.settings import APPS_DIR, BACKEND_DIR, OUTPUTS_DIR, RUNTIME_APPS_DIR
+from app.settings import APPS_DIR, BACKEND_DIR, OUTPUTS_DIR, RUNTIME_APPS_DIR  # type: ignore[reportImplicitRelativeImport]
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +235,7 @@ class ProcessManager:
     # ------------------------------------------------------------------
     async def _broadcast_status(self, app_name: str, status: str) -> None:
         try:
-            from app.core.ws_manager import ws_manager
+            from app.core.ws_manager import ws_manager  # type: ignore[reportImplicitRelativeImport]
             await ws_manager.broadcast(
                 {"type": "app_status", "data": {"app_name": app_name, "status": status}}
             )
@@ -244,7 +244,7 @@ class ProcessManager:
 
     async def _broadcast_output(self, app_name: str, output_text: str) -> None:
         try:
-            from app.core.ws_manager import ws_manager
+            from app.core.ws_manager import ws_manager  # type: ignore[reportImplicitRelativeImport]
             await ws_manager.broadcast(
                 {
                     "type": "app_output",
@@ -256,7 +256,7 @@ class ProcessManager:
 
     async def _broadcast_error(self, module_name: str, error_message: str) -> None:
         try:
-            from app.core.ws_manager import ws_manager
+            from app.core.ws_manager import ws_manager  # type: ignore[reportImplicitRelativeImport]
             await ws_manager.broadcast(
                 {
                     "type": "error",
