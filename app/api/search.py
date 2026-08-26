@@ -25,6 +25,11 @@ def search(body: SearchBody, engine: SearchEngine = Depends(get_search_engine)) 
         "message": "success",
         "data": {
             "task_id": result.task_id,
+            "report": {
+                "report_id": result.report.report_id,
+                "topic": result.report.topic,
+                "file_path": result.report.file_path,
+            },
             "sources": [
                 {
                     "source_type": s.source_type,

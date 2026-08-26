@@ -15,6 +15,7 @@ from app.analysis import channel, evidence, keyword, sentiment, timeline
 from app.analysis.models import AnalysisOutput
 from app.exceptions import ValidationError
 from app.services.collector import CollectRequest, Collector, SourceItem
+from app.services.report_service import ReportMeta, ReportWriter
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -31,6 +32,7 @@ class SearchResult:
     task_id: str
     sources: list[SourceItem]
     analysis: AnalysisOutput
+    report: ReportMeta
 
 
 class SearchEngine(Protocol):
@@ -40,10 +42,14 @@ class SearchEngine(Protocol):
 
 
 class RuleSearchEngine:
-    """基于规则的分析引擎实现。"""
+    """基于规则的分析引擎实现。
 
-    def __init__(self, collector: Collector) -> None:
+    检索流程内同步生成报告（方案 A）。
+    """
+
+    def __init__(self, collector: Collector, report_writer: ReportWriter) -> None:
         self._collector = collector
+        self._report_writer = report_writer
 
     def search(self, request: SearchRequest) -> SearchResult:
         query = request.query.strip()
@@ -55,7 +61,9 @@ class RuleSearchEngine:
             CollectRequest(query=query, source_types=request.source_types)
         )
         analysis = self._analyze(query, sources)
-        return SearchResult(task_id=task_id, sources=sources, analysis=analysis)
+        # 方案 A：检索内同步生成报告
+        report = self._report_writer.write(analysis, query)
+        return SearchResult(task_id=task_id, sources=sources, analysis=analysis, report=report)
 
     def _analyze(self, query: str, sources: list[SourceItem]) -> AnalysisOutput:
         keywords = keyword.extract_keywords(sources)

@@ -18,6 +18,7 @@ from app.services.collector import (
 from app.services.config_service import ConfigService, JsonConfigService
 from app.services.output_service import AppOutputReader, FileAppOutputReader
 from app.services.process_manager import InMemoryProcessManager, ProcessManager
+from app.services.report_service import MarkdownReportWriter, ReportWriter
 from app.services.search_service import RuleSearchEngine, SearchEngine
 from app.tasks.registry import AppRegistry
 from app.utils.constants import SourceType
@@ -70,6 +71,12 @@ def get_collector() -> Collector:
 
 
 @lru_cache
+def get_report_writer() -> ReportWriter:
+    """返回报告生成器（T8 交付）。"""
+    return MarkdownReportWriter()
+
+
+@lru_cache
 def get_search_engine() -> SearchEngine:
     """返回检索分析引擎（T7 交付，规则模式）。"""
-    return RuleSearchEngine(collector=get_collector())
+    return RuleSearchEngine(collector=get_collector(), report_writer=get_report_writer())
