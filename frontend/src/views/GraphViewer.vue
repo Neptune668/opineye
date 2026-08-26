@@ -11,6 +11,7 @@ const graphStore = useGraphStore()
 const queryNode = ref('')
 const queryRelation = ref('')
 const selectedNode = ref('')
+const loadError = ref('')
 
 const selectedNodeDetail = computed(() => {
   if (!selectedNode.value || !graphStore.graphData) return null
@@ -22,11 +23,16 @@ function onNodeClick(nodeId: string) {
 }
 
 onMounted(async () => {
-  const reportId = route.params.report_id as string | undefined
-  if (reportId) {
-    await graphStore.fetchById(reportId)
-  } else {
-    await graphStore.fetchLatest()
+  try {
+    const reportId = route.params.report_id as string | undefined
+    if (reportId) {
+      await graphStore.fetchById(reportId)
+    } else {
+      await graphStore.fetchLatest()
+    }
+    loadError.value = ''
+  } catch (e) {
+    loadError.value = (e as Error).message || '图谱加载失败'
   }
 })
 
@@ -46,7 +52,10 @@ async function onQuery() {
         <template #header-extra>
           <n-tag type="info">{{ graphStore.currentReportId || '无报告' }}</n-tag>
         </template>
-        <GraphCanvas :graph="graphStore.graphData" @node-click="onNodeClick" />
+        <n-alert v-if="loadError" type="warning" style="margin-bottom: 12px">
+          {{ loadError }}，请先在「主题检索」页发起一次检索生成图谱。
+        </n-alert>
+        <GraphCanvas v-else :graph="graphStore.graphData" @node-click="onNodeClick" />
       </n-card>
 
       <n-card title="节点详情" size="small" v-if="selectedNodeDetail">

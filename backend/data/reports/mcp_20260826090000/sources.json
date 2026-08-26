@@ -1,0 +1,135 @@
+{
+  "report_id": "mcp_20260826090000",
+  "topic": "MCP 协议发布",
+  "executed_at": "2026-08-26T09:00:00+08:00",
+  "source_types": ["news", "image", "video", "forum_post", "internal_data"],
+  "source_summary": [
+    { "source_type": "news", "count": 3 },
+    { "source_type": "image", "count": 3 },
+    { "source_type": "video", "count": 3 },
+    { "source_type": "forum_post", "count": 3 },
+    { "source_type": "internal_data", "count": 3 }
+  ],
+  "items": [
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "多家媒体报道 MCP 协议正式发布",
+      "text": "多家科技媒体报道 MCP 协议正式发布，业界普遍持正面态度，开发者表示支持并认可其标准化意义。",
+      "url": "https://example.com/news/mcp-release",
+      "collected_at": "2026-08-26T08:50:00+08:00"
+    },
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "MCP 协议发布引发技术圈热议",
+      "text": "MCP 协议发布后，技术社区讨论热烈，多数观点正面，认为其将推动 AI 工具生态发展。",
+      "url": "https://example.com/news/mcp-discussion",
+      "collected_at": "2026-08-26T08:52:00+08:00"
+    },
+    {
+      "source_type": "news",
+      "group": "公开信息",
+      "title": "行业观察：MCP 协议带来的机遇与挑战",
+      "text": "行业观察指出 MCP 协议带来机遇的同时也存在兼容性风险，部分专家提出质疑与担忧。",
+      "url": "https://example.com/news/mcp-opportunity",
+      "collected_at": "2026-08-26T08:55:00+08:00"
+    },
+    {
+      "source_type": "image",
+      "group": "多媒体",
+      "title": "MCP 协议架构图在社交平台热传",
+      "text": "MCP 协议架构图在社交平台传播，评论区好评如潮，用户对标准化方案表示满意。",
+      "url": "https://example.com/image/mcp-arch",
+      "collected_at": "2026-08-26T08:56:00+08:00"
+    },
+    {
+      "source_type": "image",
+      "group": "多媒体",
+      "title": "发布会现场图片获得大量点赞",
+      "text": "发布会现场图片获得大量点赞与转发，公众情绪正面，认可度高。",
+      "url": "https://example.com/image/mcp-launch",
+      "collected_at": "2026-08-26T08:57:00+08:00"
+    },
+    {
+      "source_type": "image",
+      "group": "多媒体",
+      "title": "对比图揭示 MCP 与传统方案差异",
+      "text": "对比图揭示 MCP 与传统方案的差异，部分用户对迁移成本表达担忧。",
+      "url": "https://example.com/image/mcp-compare",
+      "collected_at": "2026-08-26T08:58:00+08:00"
+    },
+    {
+      "source_type": "video",
+      "group": "多媒体",
+      "title": "MCP 协议讲解视频播放量破百万",
+      "text": "MCP 协议讲解视频播放量破百万，观众普遍表达满意与喜爱，点赞推荐。",
+      "url": "https://example.com/video/mcp-tutorial",
+      "collected_at": "2026-08-26T08:59:00+08:00"
+    },
+    {
+      "source_type": "video",
+      "group": "多媒体",
+      "title": "开发者访谈：为何看好 MCP",
+      "text": "开发者访谈视频中多位工程师表达对 MCP 的支持与认可。",
+      "url": "https://example.com/video/mcp-interview",
+      "collected_at": "2026-08-26T09:00:00+08:00"
+    },
+    {
+      "source_type": "video",
+      "group": "多媒体",
+      "title": "MCP 安全风险演示视频引发讨论",
+      "text": "一段演示 MCP 潜在安全风险的视频引发讨论，部分观众表达担忧。",
+      "url": "https://example.com/video/mcp-security",
+      "collected_at": "2026-08-26T09:01:00+08:00"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "MCP 协议是否值得接入？",
+      "text": "论坛用户热议 MCP 协议是否值得接入，观点分歧，部分用户质疑其必要性。",
+      "url": "https://example.com/forum/mcp-worth",
+      "collected_at": "2026-08-26T09:02:00+08:00"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "MCP 接入踩坑记录",
+      "text": "开发者分享 MCP 接入踩坑记录，指出文档不全等负面体验，表达不满。",
+      "url": "https://example.com/forum/mcp-pitfall",
+      "collected_at": "2026-08-26T09:03:00+08:00"
+    },
+    {
+      "source_type": "forum_post",
+      "group": "论坛",
+      "title": "MCP 生态进展汇总帖",
+      "text": "论坛用户汇总 MCP 生态进展，整体评价正面，认为生态在快速成熟。",
+      "url": "https://example.com/forum/mcp-eco",
+      "collected_at": "2026-08-26T09:04:00+08:00"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "内部技术评估报告",
+      "text": "内部技术评估报告指出 MCP 接入存在安全风险隐患，需重点关注认证与权限控制。",
+      "url": "https://internal.example.com/mcp-eval",
+      "collected_at": "2026-08-26T09:05:00+08:00"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "内部用户反馈汇总",
+      "text": "内部用户反馈总体正面，对 MCP 的标准化方向表示认可与支持。",
+      "url": "https://internal.example.com/mcp-feedback",
+      "collected_at": "2026-08-26T09:06:00+08:00"
+    },
+    {
+      "source_type": "internal_data",
+      "group": "内部沉淀数据",
+      "title": "内部迁移风险清单",
+      "text": "内部迁移风险清单列出兼容性风险，部分团队对迁移表示担忧。",
+      "url": "https://internal.example.com/mcp-risk",
+      "collected_at": "2026-08-26T09:07:00+08:00"
+    }
+  ]
+}

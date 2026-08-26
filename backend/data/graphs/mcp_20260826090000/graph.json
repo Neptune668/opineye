@@ -1,0 +1,24 @@
+{
+  "report_id": "mcp_20260826090000",
+  "meta": {
+    "generated_at": "2026-08-26T09:05:00+08:00",
+    "topic": "MCP 协议发布"
+  },
+  "nodes": [
+    { "id": "n0", "label": "MCP 协议发布", "type": "topic", "source_ref": "search:mcp_20260826090000" },
+    { "id": "n1", "label": "多家媒体报道 MCP 协议正式发布", "type": "source", "source_ref": "news:多家媒体报道 MCP 协议正式发布" },
+    { "id": "n2", "label": "行业观察：MCP 协议带来的机遇与挑战", "type": "source", "source_ref": "news:行业观察" },
+    { "id": "n3", "label": "MCP 协议架构图在社交平台热传", "type": "source", "source_ref": "image:MCP 协议架构图" },
+    { "id": "n4", "label": "MCP 协议讲解视频播放量破百万", "type": "source", "source_ref": "video:MCP 协议讲解视频" },
+    { "id": "n5", "label": "MCP 协议是否值得接入？", "type": "event", "source_ref": "forum_post:MCP 协议是否值得接入" },
+    { "id": "n6", "label": "内部技术评估报告", "type": "source", "source_ref": "internal_data:内部技术评估报告" }
+  ],
+  "edges": [
+    { "id": "e1", "source": "n0", "target": "n1", "type": "sourced_from", "source_ref": "search:mcp_20260826090000" },
+    { "id": "e2", "source": "n0", "target": "n2", "type": "sourced_from", "source_ref": "search:mcp_20260826090000" },
+    { "id": "e3", "source": "n0", "target": "n3", "type": "sourced_from", "source_ref": "search:mcp_20260826090000" },
+    { "id": "e4", "source": "n0", "target": "n4", "type": "sourced_from", "source_ref": "search:mcp_20260826090000" },
+    { "id": "e5", "source": "n0", "target": "n5", "type": "sourced_from", "source_ref": "search:mcp_20260826090000" },
+    { "id": "e6", "source": "n0", "target": "n6", "type": "sourced_from", "source_ref": "search:mcp_20260826090000" }
+  ]
+}
