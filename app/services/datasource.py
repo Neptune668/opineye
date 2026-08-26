@@ -110,7 +110,7 @@ class TavilyDataSource:
 
     ENDPOINT = "https://api.tavily.com/search"
 
-    def __init__(self, api_key: str, topic: str = "general", max_results: int = 10) -> None:
+    def __init__(self, api_key: str, topic: str = "general", max_results: int = 15) -> None:
         self._api_key = api_key
         self._topic = topic
         self._max_results = max_results
@@ -235,7 +235,7 @@ def build_datasource(config: dict[str, Any]) -> DataSource:
         return TavilyDataSource(
             api_key=settings.tavily_api_key,
             topic=config.get("topic", "general"),
-            max_results=int(config.get("max_results", 10)),
+            max_results=int(config.get("max_results", 15)),
         )
     if ds_type == "zhihu":
         from app.config import settings

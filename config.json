@@ -17,7 +17,7 @@
     "timeout_seconds": 30
   },
   "datasources": {
-    "news":       { "type": "tavily", "topic": "news", "max_results": 10 },
+    "news":       { "type": "tavily", "topic": "news", "max_results": 15 },
     "image":      { "type": "file", "path": "data/image.json" },
     "video":      { "type": "file", "path": "data/video.json" },
     "forum_post": { "type": "zhihu", "source_type": "forum_post", "max_results": 20 }

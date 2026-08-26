@@ -5,8 +5,6 @@
 ---
 
 ## 0. 快速开始
-# 1. 激活虚拟环境（注意是 .venv，不是 venv）
-.venv\Scripts\Activate.ps1
 
 ### 0.1 环境要求
 
@@ -16,13 +14,16 @@
 ### 0.2 启动步骤
 
 ```powershell
-# 1. 安装依赖
+# 1. 激活虚拟环境（注意是 .venv，不是 venv）
+.venv\Scripts\Activate.ps1
+
+# 2. 安装依赖
 pip install -r requirements.txt
 
-# 2.（可选）配置环境变量
+# 3.（可选）配置环境变量
 Copy-Item .env.example .env
 
-# 3. 启动服务（前后端一体）
+# 4. 启动服务（前后端一体）
 uvicorn app.main:app --reload
 ```
 
@@ -58,10 +59,15 @@ Copy-Item .env.example .env
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `DATABASE_URL` | mysql+pymysql://... | MySQL 连接（当前落库为降级可选，未连接不影响核心流程） |
+| `DATABASE_URL` | mysql+pymysql://... | MySQL 连接（落库，未连接则降级不影响核心流程） |
 | `REDIS_URL` | redis://localhost:6379/0 | Redis（Celery 用，当前同步模式不强依赖） |
-| `LLM_API_KEY` | 空 | 留空走规则引擎离线模式 |
+| `LLM_API_KEY` | 空 | LLM 分析增强（留空走规则引擎离线模式） |
+| `LLM_BASE_URL` | 空 | LLM 接口地址 |
+| `LLM_MODEL` | 空 | LLM 模型名 |
+| `TAVILY_API_KEY` | 空 | Tavily 搜索（news 来源，留空回退 file 数据源） |
+| `z_c0` | 空 | 知乎登录凭证（forum_post 来源热榜，留空回退 file 数据源） |
 | `REPO_BACKEND` | mysql | 仓储后端（预留） |
+| `SECRET_KEY` | change-me | JWT 签名密钥（生产环境务必修改） |
 
 ### 1.3 数据库迁移（可选）
 
@@ -110,25 +116,27 @@ uvicorn app.main:app --reload
 
 | 方法 | 路径 | 说明 | 请求体 |
 |------|------|------|--------|
-| GET | `/api/health` | 健康检查 | - |
-| GET | `/api/status` | 各应用运行状态 | - |
-| GET | `/api/start/{app_name}` | 启动单功能应用 | - |
-| GET | `/api/stop/{app_name}` | 停止单功能应用 | - |
-| GET | `/api/output/{app_name}` | 应用最近输出 | - |
-| GET | `/api/test_log/{app_name}` | 应用测试日志 | - |
-| POST | `/api/search` | 主题检索与分析 | `{query, source_types}` |
-| GET | `/api/forum/start` | 启动论坛采集 | - |
-| GET | `/api/forum/stop` | 停止论坛采集 | - |
-| GET | `/api/forum/log` | 论坛最新日志 | - |
-| POST | `/api/forum/log/history` | 论坛历史日志 | `{date}` |
-| GET | `/api/config` | 查询配置 | - |
-| POST | `/api/config` | 更新配置 | `{version, ...}` |
-| GET | `/api/system/status` | 系统状态 | - |
-| POST | `/api/system/start` | 启动系统 | - |
-| POST | `/api/system/shutdown` | 关闭系统 | - |
-| GET | `/api/graph/latest` | 最新图谱 | - |
-| GET | `/api/graph/{report_id}` | 指定报告图谱 | - |
-| POST | `/api/graph/query` | 图谱关系查询 | `{report_id, node_id?, relation_type?}` |
+| GET | `/api/health` | 健康检查（公开） | - |
+| POST | `/api/register` | 注册操作用户（公开） | `{username, password}` |
+| POST | `/api/login` | 登录获取 token（公开） | `{username, password}` |
+| GET | `/api/status` | 各应用运行状态（user+） | - |
+| GET | `/api/start/{app_name}` | 启动单功能应用（root） | - |
+| GET | `/api/stop/{app_name}` | 停止单功能应用（root） | - |
+| GET | `/api/output/{app_name}` | 应用最近输出（user+） | - |
+| GET | `/api/test_log/{app_name}` | 应用测试日志（user+） | - |
+| POST | `/api/search` | 主题检索与分析（user+） | `{query, source_types}` |
+| GET | `/api/forum/start` | 启动论坛采集（root） | - |
+| GET | `/api/forum/stop` | 停止论坛采集（root） | - |
+| GET | `/api/forum/log` | 论坛最新日志（user+） | - |
+| POST | `/api/forum/log/history` | 论坛历史日志（user+） | `{date}` |
+| GET | `/api/config` | 查询配置（user+） | - |
+| POST | `/api/config` | 更新配置（root） | `{version, ...}` |
+| GET | `/api/system/status` | 系统状态（user+） | - |
+| POST | `/api/system/start` | 启动系统（root） | - |
+| POST | `/api/system/shutdown` | 关闭系统（root） | - |
+| GET | `/api/graph/latest` | 最新图谱（user+） | - |
+| GET | `/api/graph/{report_id}` | 指定报告图谱（user+） | - |
+| POST | `/api/graph/query` | 图谱关系查询（user+） | `{report_id, node_id?, relation_type?}` |
 | WS | `/ws` | 实时消息推送 | - |
 
 ---
@@ -176,10 +184,28 @@ python scripts/demo.py
 
 ---
 
-## 7. 已实现与占位说明
+## 7. 数据源与已实现说明
 
-- **已实现**：控制层、进程管理（内存状态）、检索分析（规则模式）、报告、图谱、论坛（模拟）、系统启停、WebSocket、配置。
-- **占位/模拟**：公开信息采集、论坛真实抓取、情绪词典（精简）、LLM 增强。详见 `未实现功能说明.md`。
+### 7.1 数据源
+
+| 来源类型 | 数据源 | 说明 |
+|----------|--------|------|
+| `news` | Tavily 搜索 | 真实网络搜索，一次请求获取 15 条数据 |
+| `forum_post` | 知乎热榜 | 真实热榜数据（需 `z_c0` Cookie） |
+| `image` / `video` | 本地文件 | `data/image.json`、`data/video.json` |
+| `internal_data` | 本地文件 | `data/internal_data.json`（内部沉淀数据） |
+
+> 数据源均可通过 `config.json` 的 `datasources` 段配置；外部数据源不可用时自动回退本地文件数据。
+
+### 7.2 鉴权说明
+
+- 角色：`root`（系统管理员，内置账号，初始密码 1234）、`user`（报告人/操作用户，需注册）
+- 认证：JWT token，登录后通过 `Authorization: Bearer {token}` 请求头传递
+- 接口权限分级见「3.2 接口明细」中括号标注（`root` / `user+` / `公开`）
+
+### 7.3 已实现能力
+
+控制层、进程管理、检索分析、报告、图谱、论坛采集（知乎热榜）、系统启停、WebSocket、配置、RBAC 鉴权、LLM 分析增强均已实现。详见 `未实现功能说明.md`。
 
 ---
 
