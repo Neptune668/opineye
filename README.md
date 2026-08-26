@@ -196,6 +196,7 @@ python scripts/demo.py
 | `internal_data` | 本地文件 | `data/internal_data.json`（内部沉淀数据） |
 
 > 数据源均可通过 `config.json` 的 `datasources` 段配置；外部数据源不可用时自动回退本地文件数据。
+> 论坛监控应用（`/api/forum/start`）同样接入知乎热榜，无 `z_c0` 时回退 `data/forum_post.json`。
 
 ### 7.2 鉴权说明
 
