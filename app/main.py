@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from app import __version__
 from app.api import apps as apps_api
 from app.api import config as config_api
+from app.api import forum as forum_api
 from app.api import output as output_api
 from app.api import search as search_api
 from app.exceptions import AppError
@@ -26,6 +27,7 @@ app.include_router(config_api.router)
 app.include_router(apps_api.router)
 app.include_router(output_api.router)
 app.include_router(search_api.router)
+app.include_router(forum_api.router)
 
 
 @app.on_event("startup")

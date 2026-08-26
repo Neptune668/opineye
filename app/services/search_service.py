@@ -48,8 +48,8 @@ class RuleSearchEngine:
     """
 
     def __init__(self, collector: Collector, report_writer: ReportWriter) -> None:
-        self._collector = collector
-        self._report_writer = report_writer
+        self._collector: Collector = collector
+        self._report_writer: ReportWriter = report_writer
 
     def search(self, request: SearchRequest) -> SearchResult:
         query = request.query.strip()

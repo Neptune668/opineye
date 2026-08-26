@@ -16,6 +16,7 @@ from app.services.collector import (
     PlaceholderCollector,
 )
 from app.services.config_service import ConfigService, JsonConfigService
+from app.services.forum_service import ForumCollector, SimulatedForumCollector
 from app.services.output_service import AppOutputReader, FileAppOutputReader
 from app.services.process_manager import InMemoryProcessManager, ProcessManager
 from app.services.report_service import MarkdownReportWriter, ReportWriter
@@ -80,3 +81,9 @@ def get_report_writer() -> ReportWriter:
 def get_search_engine() -> SearchEngine:
     """返回检索分析引擎（T7 交付，规则模式）。"""
     return RuleSearchEngine(collector=get_collector(), report_writer=get_report_writer())
+
+
+@lru_cache
+def get_forum_collector() -> ForumCollector:
+    """返回论坛采集器（T9 交付，模拟实现）。"""
+    return SimulatedForumCollector()
