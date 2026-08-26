@@ -16,5 +16,23 @@
     "event": "stop",
     "message": "论坛采集任务已停止",
     "task_status": "stopped"
+  },
+  {
+    "time": "2026-08-26T10:34:05.717999",
+    "event": "collect",
+    "message": "论坛采集任务已启动",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T10:34:06.045129",
+    "event": "collect",
+    "message": "采集到帖子 12 条",
+    "task_status": "running"
+  },
+  {
+    "time": "2026-08-26T10:34:07.345307",
+    "event": "stop",
+    "message": "论坛采集任务已停止",
+    "task_status": "stopped"
   }
 ]

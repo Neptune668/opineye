@@ -24,6 +24,25 @@ def get_system_status() -> str:
     return _system_status
 
 
+async def _broadcast_system_status(status: str) -> None:
+    """广播系统状态变化。"""
+    try:
+        from app.core.ws_manager import ws_manager
+        running_apps = [
+            name
+            for name, s in process_manager.all_status().items()
+            if s == "running"
+        ]
+        await ws_manager.broadcast(
+            {
+                "type": "system_status",
+                "data": {"system_status": status, "running_apps": running_apps},
+            }
+        )
+    except Exception:
+        pass
+
+
 def set_system_status(status: str) -> None:
     global _system_status
     _system_status = status
@@ -57,6 +76,7 @@ async def system_start():
         await process_manager.start(app_name)
         started[app_name] = process_manager.status(app_name)
     logger.info("系统启动，已启动应用：%s", list(started))
+    await _broadcast_system_status(get_system_status())
     return ApiResponse(data={"system_status": get_system_status()})
 
 
@@ -68,4 +88,5 @@ async def system_shutdown():
         await process_manager.stop(app_name)
     set_system_status("offline")
     logger.info("系统已关闭")
+    await _broadcast_system_status(get_system_status())
     return ApiResponse(data={"system_status": get_system_status()})

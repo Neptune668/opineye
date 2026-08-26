@@ -22,6 +22,18 @@ async def search(req: SearchRequest):
     graph = graph_service.generate_graph(report_id, record)
     graph_path = graph_service.save_graph(report_id, graph)
 
+    # 5. 广播图谱生成完成
+    try:
+        from app.core.ws_manager import ws_manager
+        await ws_manager.broadcast(
+            {
+                "type": "graph_ready",
+                "data": {"report_id": report_id, "graph_path": graph_path},
+            }
+        )
+    except Exception:
+        pass
+
     return ApiResponse(
         data=SearchResult(
             report_id=report_id,

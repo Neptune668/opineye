@@ -74,7 +74,7 @@ async def _collect_loop() -> None:
 
 
 async def _append_event(event: str, message: str, status: str) -> None:
-    """写入 latest.log 并归档到 history/{date}.json。"""
+    """写入 latest.log、归档到 history/{date}.json，并广播 forum_log。"""
     time_str = datetime.now().isoformat()
     line = f"{time_str} [{event}] {message}"
     store.append_log(settings.FORUM_LATEST_LOG, line)
@@ -86,6 +86,18 @@ async def _append_event(event: str, message: str, status: str) -> None:
         "task_status": status,
     }
     await _append_history(entry)
+
+    # 广播论坛日志消息
+    try:
+        from app.core.ws_manager import ws_manager
+        await ws_manager.broadcast(
+            {
+                "type": "forum_log",
+                "data": {"message_text": message, "task_status": status},
+            }
+        )
+    except Exception:
+        pass
 
 
 async def _append_history(entry: dict[str, Any]) -> None:
