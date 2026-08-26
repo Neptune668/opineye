@@ -97,17 +97,25 @@ async function stopApp(name) {
     loadStatus();
   } catch (e) { showError(e.message); }
 }
+function showAppOutput(title, content) {
+  $('#output-title').textContent = title;
+  const view = $('#app-output-view');
+  view.textContent = content || '(空)';
+  // 滚动到底部（最新内容）
+  view.scrollTop = view.scrollHeight;
+}
+
 async function viewOutput(name) {
   try {
     const res = await apiGet(`/output/${name}`);
-    alert(`【${name}】输出：\n${res.data?.output_text || '(空)'}`);
+    showAppOutput(`【${name}】输出`, res.data?.output_text || '(空)');
   } catch (e) { showError(e.message); }
 }
 async function viewTestLog(name) {
   try {
     const res = await apiGet(`/test_log/${name}`);
     const lines = res.data?.lines || [];
-    alert(`【${name}】测试日志（末尾 ${lines.length} 行）：\n${lines.join('\n') || '(空)'}`);
+    showAppOutput(`【${name}】测试日志（末尾 ${lines.length} 行）`, lines.join('\n') || '(空)');
   } catch (e) { showError(e.message); }
 }
 
@@ -163,7 +171,10 @@ $('#btn-forum-refresh').addEventListener('click', () => { loadForumLog().catch((
 async function loadForumLog() {
   const res = await apiGet('/forum/log');
   const entries = res.data?.entries || [];
-  $('#forum-log').textContent = entries.map((e) => `${e.ts} [${e.event_type}] (${e.task_status}) ${e.message}`).join('\n') || '(无日志)';
+  const view = $('#forum-log');
+  view.textContent = entries.map((e) => `${e.ts} [${e.event_type}] (${e.task_status}) ${e.message}`).join('\n') || '(无日志)';
+  // 自动滚动到底部（最新日志）
+  view.scrollTop = view.scrollHeight;
 }
 
 $('#btn-forum-history').addEventListener('click', async () => {
@@ -172,7 +183,9 @@ $('#btn-forum-history').addEventListener('click', async () => {
   try {
     const res = await apiPost('/forum/log/history', { date });
     const entries = res.data?.entries || [];
-    $('#forum-history').textContent = entries.map((e) => `${e.ts} [${e.event_type}] ${e.message}`).join('\n') || '(无历史日志)';
+    const view = $('#forum-history');
+    view.textContent = entries.map((e) => `${e.ts} [${e.event_type}] ${e.message}`).join('\n') || '(无历史日志)';
+    view.scrollTop = view.scrollHeight;
   } catch (e) { showError(e.message); }
 });
 

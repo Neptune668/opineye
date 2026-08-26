@@ -160,3 +160,9 @@ input:focus, select:focus, textarea:focus {
 .stat-value { font-size: 18px; font-weight: 600; margin-top: 6px; }
 
 .empty { color: var(--text-dim); padding: 20px; text-align: center; }
+
+/* 应用输出面板 */
+.output-panel { margin-top: 16px; }
+.output-header { display: flex; align-items: center; gap: 12px; }
+.output-title { color: var(--primary); font-size: 13px; }
+#app-output-view { max-height: 240px; }

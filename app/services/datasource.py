@@ -154,11 +154,75 @@ class TavilyDataSource:
         ]
 
 
+class ZhihuDataSource:
+    """知乎热榜数据源：调用知乎热榜接口获取热搜数据。
+
+    API：GET https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total
+    需携带 Cookie（登录态）访问，否则返回 401。
+    返回 data[]，每项含 target.title、target.url、detail_text（热度）。
+    映射为 forum_post 来源（论坛帖子）。
+    """
+
+    ENDPOINT = "https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total"
+
+    def __init__(self, source_type: str = "forum_post", max_results: int = 20, z_c0: str = "") -> None:
+        self._source_type = source_type
+        self._max_results = max_results
+        self._z_c0 = z_c0
+
+    def fetch(self, query: str) -> list[SourceItem]:
+        import requests
+
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Referer": "https://www.zhihu.com/hot",
+            "Accept": "application/json, text/plain, */*",
+        }
+        if self._z_c0:
+            headers["Cookie"] = f"z_c0={self._z_c0}"
+        else:
+            logger.warning("知乎 z_c0 未配置，热榜接口可能返回 401")
+
+        try:
+            resp = requests.get(self.ENDPOINT, headers=headers, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:  # noqa: BLE001 - 网络异常返回空，降级到 file 数据源
+            logger.exception("知乎热榜抓取失败")
+            return []
+
+        items: list[SourceItem] = []
+        for item in data.get("data", [])[: self._max_results]:
+            if not isinstance(item, dict):
+                continue
+            target = item.get("target") or {}
+            title = target.get("title") or ""
+            url = target.get("url") or ""
+            hot = item.get("detail_text") or ""
+            if not title:
+                continue
+            items.append(
+                SourceItem(
+                    source_type=self._source_type,
+                    title=title,
+                    url=url,
+                    summary=hot,
+                    published_at=None,
+                )
+            )
+        logger.info("知乎热榜采集完成", extra={"count": len(items)})
+        return items
+
+
 def build_datasource(config: dict[str, Any]) -> DataSource:
     """根据配置构建数据源适配器。
 
     config 形如 {"type": "file", "path": "data/news.json"}
     或 {"type": "tavily", "topic": "news"}
+    或 {"type": "zhihu", "source_type": "forum_post"}
     """
     ds_type = config.get("type", "file")
     if ds_type == "file":
@@ -172,5 +236,13 @@ def build_datasource(config: dict[str, Any]) -> DataSource:
             api_key=settings.tavily_api_key,
             topic=config.get("topic", "general"),
             max_results=int(config.get("max_results", 10)),
+        )
+    if ds_type == "zhihu":
+        from app.config import settings
+
+        return ZhihuDataSource(
+            source_type=config.get("source_type", "forum_post"),
+            max_results=int(config.get("max_results", 20)),
+            z_c0=settings.z_c0,
         )
     raise ValueError(f"未知数据源类型：{ds_type}")

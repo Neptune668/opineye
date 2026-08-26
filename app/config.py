@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # Tavily 搜索
     tavily_api_key: str = ""
 
+    # 知乎（z_c0 登录凭证，用于访问热榜接口）
+    z_c0: str = ""
+
     secret_key: str = "change-me"
 
 
