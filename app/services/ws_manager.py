@@ -35,11 +35,15 @@ class ConnectionManager:
         self._connections: set[WebSocket] = set()
         self._lock = asyncio.Lock()
         self._subscribed = False
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     async def connect(self, websocket: WebSocket) -> None:
         await websocket.accept()
         async with self._lock:
             self._connections.add(websocket)
+        # 记录主事件循环，供同步上下文跨线程调度广播
+        if self._loop is None:
+            self._loop = asyncio.get_running_loop()
         self._ensure_subscribed()
         logger.info("WebSocket 客户端已连接", extra={"total": len(self._connections)})
 
@@ -66,11 +70,23 @@ class ConnectionManager:
             self._event_bus.subscribe(event_type, self._make_handler())
 
     def _make_handler(self):
-        """构造事件处理回调（将同步事件转为异步广播）。"""
+        """构造事件处理回调（将同步事件安全地调度到主事件循环广播）。
+
+        事件发布发生在同步上下文（FastAPI 同步路由的线程池线程），
+        因此不能用 asyncio.create_task；改用 run_coroutine_threadsafe。
+        """
 
         def handler(event: DomainEvent) -> None:
-            asyncio.create_task(
-                self.broadcast({"type": event.type, "payload": event.payload})
+            loop = self._loop
+            if loop is None:
+                # 尚未有 WebSocket 连接（无事件循环），忽略
+                return
+            future = asyncio.run_coroutine_threadsafe(
+                self.broadcast({"type": event.type, "payload": event.payload}), loop
             )
+            try:
+                future.result(timeout=5)
+            except Exception:  # noqa: BLE001 - 广播失败不影响主流程
+                logger.exception("WebSocket 广播异常", extra={"event_type": event.type})
 
         return handler
