@@ -36,7 +36,7 @@ class RuleLLMClient:
 
 
 class HttpLLMClient:
-    """HTTP 大模型实现：调用 OpenAI 兼容接口。
+    """HTTP 大模型实现：通过 LangChain 的 OpenAI 兼容封装调用（Moonshot / OpenAI 等）。
 
     未配置密钥时 available() 返回 False，由上层回退到规则实现。
     """
@@ -45,33 +45,33 @@ class HttpLLMClient:
         self._api_key = settings.llm_api_key
         self._base_url = settings.llm_base_url or "https://api.openai.com/v1"
         self._model = settings.llm_model or "gpt-4o-mini"
+        self._chat = None
 
     def available(self) -> bool:
         return bool(self._api_key)
 
-    def analyze(self, text: str, task: str) -> str:
-        import requests
+    def _client(self):
+        """懒加载 ChatOpenAI 客户端（未配置/未安装依赖时不触发 import）。"""
+        if self._chat is None:
+            from langchain_openai import ChatOpenAI
 
-        url = f"{self._base_url.rstrip('/')}/chat/completions"
-        payload = {
-            "model": self._model,
-            "messages": [
-                {"role": "system", "content": f"你是舆情分析助手，请完成以下任务：{task}"},
-                {"role": "user", "content": text},
-            ],
-            "temperature": 0.3,
-        }
-        headers = {"Authorization": f"Bearer {self._api_key}"}
-        resp = requests.post(url, json=payload, headers=headers, timeout=30)
-        if resp.status_code >= 400:
-            # 记录接口返回的错误详情，便于定位 400/401/429 等真实原因（默认异常不含 body）。
-            logger.warning(
-                "LLM 接口调用失败",
-                extra={"status": resp.status_code, "body": resp.text[:500]},
+            self._chat = ChatOpenAI(
+                model=self._model,
+                api_key=self._api_key,
+                base_url=self._base_url,
+                # 思考类模型（如 kimi-k2.6）仅接受 temperature=1，省略则用模型默认值
             )
-        resp.raise_for_status()
-        data = resp.json()
-        return data["choices"][0]["message"]["content"]
+        return self._chat
+
+    def analyze(self, text: str, task: str) -> str:
+        resp = self._client().invoke(
+            [
+                ("system", f"你是舆情分析助手，请完成以下任务：{task}"),
+                ("human", text),
+            ]
+        )
+        content = resp.content
+        return content if isinstance(content, str) else str(content)
 
 
 class FallbackLLMClient:

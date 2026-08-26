@@ -13,3 +13,4 @@ alembic==1.14.0
 requests==2.32.3
 PyJWT==2.10.1
 jieba==0.42.1
+langchain-openai==1.6.0
