@@ -20,6 +20,9 @@ def tmp_data_root(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "GRAPHS_DIR", tmp_path / "graphs")
     monkeypatch.setattr(settings, "OUTPUTS_DIR", tmp_path / "outputs")
     monkeypatch.setattr(
+        settings, "FORUM_LATEST_LOG", tmp_path / "runtime" / "forum" / "latest.log"
+    )
+    monkeypatch.setattr(
         settings,
         "REQUIRED_DIRS",
         (

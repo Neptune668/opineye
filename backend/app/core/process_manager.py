@@ -16,7 +16,7 @@ import signal
 import sys
 from typing import IO
 
-from app.settings import APPS_DIR, BACKEND_DIR, OUTPUTS_DIR, RUNTIME_APPS_DIR  # type: ignore[reportImplicitRelativeImport]
+from app import settings
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class ProcessManager:
             logger.warning("应用 %s 当前状态 %s，拒绝启动", app_name, current)
             return False
 
-        script = APPS_DIR / f"{app_name}_app.py"
+        script = settings.APPS_DIR / f"{app_name}_app.py"
         if not script.exists():
             logger.error("应用脚本不存在：%s", script)
             self._procs[app_name] = AppProc(
@@ -144,14 +144,14 @@ class ProcessManager:
     # ------------------------------------------------------------------
     async def read_output(self, app_name: str) -> str:
         """读取应用最近一次文本输出（outputs/{app_name}/latest.txt）。"""
-        path = OUTPUTS_DIR / app_name / "latest.txt"
+        path = settings.OUTPUTS_DIR / app_name / "latest.txt"
         if not path.exists():
             return ""
         return await asyncio.to_thread(path.read_text, encoding="utf-8")
 
     async def read_log(self, app_name: str, tail: int = 200) -> list[str]:
         """读取应用日志尾部（runtime/apps/{app_name}.log）。"""
-        path = RUNTIME_APPS_DIR / f"{app_name}.log"
+        path = settings.RUNTIME_APPS_DIR / f"{app_name}.log"
         if not path.exists():
             return []
         lines = await asyncio.to_thread(path.read_text, encoding="utf-8")
@@ -162,16 +162,16 @@ class ProcessManager:
     # ------------------------------------------------------------------
     async def _launch(self, app_name: str) -> None:
         """创建子进程并启动输出泵。"""
-        log_path = RUNTIME_APPS_DIR / f"{app_name}.log"
+        log_path = settings.RUNTIME_APPS_DIR / f"{app_name}.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_f = open(log_path, "a", encoding="utf-8")
 
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
-            str(APPS_DIR / f"{app_name}_app.py"),
+            str(settings.APPS_DIR / f"{app_name}_app.py"),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,  # 错误合并进标准输出
-            cwd=str(BACKEND_DIR),
+            cwd=str(settings.BACKEND_DIR),
         )
 
         async def _pump():
@@ -218,11 +218,11 @@ class ProcessManager:
     async def _save_latest_output(self, app_name: str) -> None:
         """应用正常退出时，将日志尾部写入 latest.txt。"""
         try:
-            log_path = RUNTIME_APPS_DIR / f"{app_name}.log"
+            log_path = settings.RUNTIME_APPS_DIR / f"{app_name}.log"
             text = ""
             if log_path.exists():
                 text = await asyncio.to_thread(log_path.read_text, encoding="utf-8")
-            out_path = OUTPUTS_DIR / app_name / "latest.txt"
+            out_path = settings.OUTPUTS_DIR / app_name / "latest.txt"
             out_path.parent.mkdir(parents=True, exist_ok=True)
             await asyncio.to_thread(out_path.write_text, text, encoding="utf-8")
         except Exception as exc:
