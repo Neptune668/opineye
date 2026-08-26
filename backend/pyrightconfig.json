@@ -1,0 +1,8 @@
+{
+  "include": ["app", "apps", "tests"],
+  "exclude": ["data", "examples"],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "reportImplicitRelativeImport": false,
+  "reportMissingTypeStubs": false
+}
