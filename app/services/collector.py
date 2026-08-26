@@ -2,10 +2,10 @@
 
 来源类型（对应需求 2.2.8）：news / image / video / forum_post / internal_data。
 
-当前实现策略：
+实现策略：
   - internal_data：真实离线采集（读取 data/ 目录预置样本）。
-  - news / image / video / forum_post：占位适配器（返回空结果），
-    见《未实现功能说明.md》。
+  - news / image / video / forum_post：通过可插拔数据源适配器采集，
+    默认 file 类型（读取本地 JSON），可配置为 http 接入真实数据源。
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from app.services.datasource import DataSource
 from app.utils.constants import SourceType
 from app.utils.logging import get_logger
 from app.utils.storage import PROJECT_ROOT
@@ -52,8 +53,8 @@ class Collector(Protocol):
 class InternalDataCollector:
     """内部数据源采集器：读取 data/ 目录下的样本 JSON 文件。
 
-    数据文件约定：data/{source_type}.json 或 data/internal_data.json，
-    结构为 SourceItem 列表。按 query 做标题/摘要的简单关键词匹配过滤。
+    数据文件约定：data/internal_data.json，结构为 SourceItem 列表。
+    按 query 做标题/摘要的简单关键词匹配过滤。
     """
 
     def __init__(self, data_dir: Path = DATA_DIR) -> None:
@@ -83,18 +84,23 @@ class InternalDataCollector:
         )
 
 
-class PlaceholderCollector:
-    """占位采集器：news / image / video / forum_post 均返回空结果。
+class DataSourceCollector:
+    """基于数据源适配器的采集器。
 
-    TODO(placeholder): 后续接入真实数据源替换，见《未实现功能说明.md》2.1。
+    将 news / image / video / forum_post 等来源委托给可插拔的 DataSource，
+    实现配置化采集。
     """
 
-    def __init__(self, source_type: str) -> None:
+    def __init__(self, source_type: str, data_source: DataSource) -> None:
         self._source_type = source_type
+        self._data_source = data_source
 
     def collect(self, request: CollectRequest) -> list[SourceItem]:
-        logger.info("占位采集器执行", extra={"source_type": self._source_type, "query": request.query})
-        return []
+        try:
+            return self._data_source.fetch(request.query)
+        except Exception:  # noqa: BLE001 - 采集失败返回空，不影响其他来源
+            logger.exception("数据源采集失败", extra={"source_type": self._source_type})
+            return []
 
 
 class CompositeCollector:

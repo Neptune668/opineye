@@ -13,10 +13,11 @@ from app.analysis.llm import build_llm_client
 from app.services.collector import (
     Collector,
     CompositeCollector,
+    DataSourceCollector,
     InternalDataCollector,
-    PlaceholderCollector,
 )
 from app.services.config_service import ConfigService, JsonConfigService
+from app.services.datasource import build_datasource
 from app.services.forum_service import ForumCollector, SimulatedForumCollector
 from app.services.graph_service import FileGraphStore
 from app.services.output_service import AppOutputReader, FileAppOutputReader
@@ -63,15 +64,21 @@ def get_app_output_reader() -> AppOutputReader:
 def get_collector() -> Collector:
     """返回组合采集器（T6 交付）。
 
-    internal_data 为真实离线采集，其余来源为占位适配器。
+    internal_data 为真实离线采集；news/image/video/forum_post
+    通过可插拔数据源适配器（默认 file 类型）采集。
     """
+    # 从 config.json 读取数据源配置（缺省提供 file 默认值）
+    config = get_config_service().read().data
+    ds_configs = config.get("datasources", {})
+
     collectors: dict[str, Collector] = {
         SourceType.INTERNAL_DATA.value: InternalDataCollector(),
-        SourceType.NEWS.value: PlaceholderCollector(SourceType.NEWS.value),
-        SourceType.IMAGE.value: PlaceholderCollector(SourceType.IMAGE.value),
-        SourceType.VIDEO.value: PlaceholderCollector(SourceType.VIDEO.value),
-        SourceType.FORUM_POST.value: PlaceholderCollector(SourceType.FORUM_POST.value),
     }
+    for source_type in (SourceType.NEWS, SourceType.IMAGE, SourceType.VIDEO, SourceType.FORUM_POST):
+        ds_cfg = ds_configs.get(source_type.value, {"type": "file", "path": f"data/{source_type.value}.json"})
+        collectors[source_type.value] = DataSourceCollector(
+            source_type.value, build_datasource(ds_cfg)
+        )
     return CompositeCollector(collectors)
 
 

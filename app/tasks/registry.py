@@ -1,6 +1,7 @@
 """应用注册表：app_name → Celery Task 映射。
 
 应用清单从 config.json 的 apps 段读取，避免硬编码。
+每个 app_name 映射到真实任务（T6/T7 整合后）。
 """
 
 from __future__ import annotations
@@ -9,14 +10,14 @@ from dataclasses import dataclass
 
 from app.utils.constants import AppState
 
-# 应用名称 → 占位任务名（T4 阶段统一指向 placeholder_task）
+# 应用名称 → 真实任务名
 DEFAULT_APPS: dict[str, str] = {
-    "topic_search": "opineye.placeholder",
-    "media_search": "opineye.placeholder",
-    "forum_collect": "opineye.placeholder",
-    "insight": "opineye.placeholder",
-    "report": "opineye.placeholder",
-    "graph": "opineye.placeholder",
+    "topic_search": "opineye.topic_search",
+    "media_search": "opineye.media_search",
+    "forum_collect": "opineye.forum_collect",
+    "insight": "opineye.insight",
+    "report": "opineye.report",
+    "graph": "opineye.graph",
 }
 
 
