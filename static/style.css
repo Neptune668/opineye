@@ -22,6 +22,41 @@ body {
 
 .layout { display: flex; min-height: 100vh; }
 
+.hidden { display: none !important; }
+
+/* 登录页 */
+.login-screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 20%, #1a2130 0%, var(--bg) 70%);
+}
+.login-card {
+  width: 360px; background: var(--panel);
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 32px; box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.login-brand { padding: 0; border-bottom: none; margin-bottom: 8px; justify-content: center; }
+.login-sub { color: var(--text-dim); text-align: center; margin-bottom: 20px; font-size: 13px; }
+.login-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.login-tab {
+  flex: 1; padding: 8px 0; text-align: center; cursor: pointer;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text-dim); transition: all 0.15s;
+}
+.login-tab.active { color: var(--text); border-color: var(--primary); background: var(--panel); }
+.login-form { display: flex; flex-direction: column; gap: 12px; }
+.login-form input, .login-form select { width: 100%; }
+.login-btn { width: 100%; margin-top: 4px; }
+.login-error { color: var(--danger); font-size: 12px; min-height: 18px; margin-top: 12px; text-align: center; }
+.login-hint { color: var(--text-dim); font-size: 12px; text-align: center; margin-top: 8px; }
+
+/* 用户信息 */
+.user-box { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.user-name { font-weight: 600; }
+.user-role { font-size: 12px; color: var(--primary); }
+.user-actions { margin-bottom: 10px; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+
 /* 侧边栏 */
 .sidebar {
   width: 220px;

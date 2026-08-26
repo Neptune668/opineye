@@ -1,9 +1,12 @@
 """鉴权模块：密码哈希、JWT 签发/校验、角色权限控制。
 
-角色：
-  - root：系统管理员（内置，全部权限）
-  - user：报告人/操作用户（检索/查看图谱/查看论坛日志等只读权限）
-初始密码：1234
+三种角色（对应需求文档 2.2.2）：
+  - admin：系统管理员（内置，全部权限）
+  - operator：操作用户（启停单功能应用、发起主题检索、查看输出）
+  - viewer：报告查看人（只读：查看报告/图谱/论坛日志/来源证据）
+
+角色层级：admin > operator > viewer。
+初始管理员：admin / 1234
 """
 
 from __future__ import annotations
@@ -21,18 +24,35 @@ from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-ROLE_ROOT = "root"
-ROLE_USER = "user"
+ROLE_ADMIN = "admin"
+ROLE_OPERATOR = "operator"
+ROLE_VIEWER = "viewer"
 
-# 各接口所需角色（接口前缀 -> 允许的角色集合）
-# user 可访问：检索、图谱查看、论坛查看、报告查看、健康检查
-# root 额外可访问：系统启停、配置修改、应用启停、用户管理
-USER_ALLOWED_PREFIXES = [
-    "/api/search",
-    "/api/graph",
-    "/api/forum/log",
-    "/api/config",  # GET 允许，POST 需 root（见 _check_config）
-]
+# 兼容旧角色别名（历史数据可能为 root/user，统一映射）
+ROLE_ROOT = ROLE_ADMIN
+ROLE_USER = ROLE_OPERATOR
+
+# 角色层级（用于「某角色及以上」判断）
+_ROLE_RANK = {
+    ROLE_VIEWER: 1,
+    ROLE_OPERATOR: 2,
+    ROLE_ADMIN: 3,
+}
+
+
+def _normalize_role(role: str) -> str:
+    """兼容旧角色命名，root -> admin，user -> operator。"""
+    return {"root": ROLE_ADMIN, "user": ROLE_OPERATOR}.get(role, role)
+
+
+def normalize_role(role: str) -> str:
+    """公开的角色规范化接口（供 auth 路由使用）。"""
+    return _normalize_role(role)
+
+
+def role_at_least(role: str, minimum: str) -> bool:
+    """判断 role 是否达到 minimum 层级。"""
+    return _ROLE_RANK.get(_normalize_role(role), 0) >= _ROLE_RANK.get(minimum, 3)
 
 
 class UnauthorizedError(AppError):
@@ -76,7 +96,7 @@ def create_token(username: str, role: str) -> str:
     """签发 JWT token，有效期 24 小时。"""
     payload = {
         "username": username,
-        "role": role,
+        "role": _normalize_role(role),
         "exp": int(time.time()) + 24 * 3600,
     }
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
@@ -86,7 +106,10 @@ def decode_token(token: str) -> TokenPayload:
     """校验并解析 JWT，失败抛出 UnauthorizedError。"""
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
-        return TokenPayload(username=payload["username"], role=payload["role"])
+        return TokenPayload(
+            username=payload["username"],
+            role=_normalize_role(payload["role"]),
+        )
     except jwt.ExpiredSignatureError:
         raise UnauthorizedError("token 已过期")
     except jwt.InvalidTokenError:
@@ -95,5 +118,6 @@ def decode_token(token: str) -> TokenPayload:
 
 def require_role(role: str, allowed_roles: set[str]) -> None:
     """校验角色是否在允许集合内，否则抛 ForbiddenError。"""
-    if role not in allowed_roles:
+    normalized = _normalize_role(role)
+    if normalized not in {_normalize_role(r) for r in allowed_roles}:
         raise ForbiddenError(f"角色 {role} 无权访问该资源")

@@ -1,6 +1,6 @@
 """论坛模块路由：/api/forum/start、/stop、/log、/log/history。
 
-权限：start/stop 仅 root；log/history 允许 user 及以上。
+权限：start/stop 仅 operator 及以上；log/history 允许 viewer 及以上。
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends
 
-from app.api.deps import require_admin, require_user
+from app.api.deps import require_operator, require_viewer
 from app.dependencies import get_forum_collector
 from app.services.forum_service import ForumCollector
 
@@ -30,7 +30,7 @@ def _entries(entries: list) -> list[dict]:
 @router.get("/start")
 def start(
     forum: ForumCollector = Depends(get_forum_collector),
-    _: object = Depends(require_admin),
+    _: object = Depends(require_operator),
 ) -> dict:
     forum.start()
     return {"code": 0, "message": "success", "data": {"status": "running"}}
@@ -39,7 +39,7 @@ def start(
 @router.get("/stop")
 def stop(
     forum: ForumCollector = Depends(get_forum_collector),
-    _: object = Depends(require_admin),
+    _: object = Depends(require_operator),
 ) -> dict:
     forum.stop()
     return {"code": 0, "message": "success", "data": {"status": "stopped"}}
@@ -48,7 +48,7 @@ def stop(
 @router.get("/log")
 def log(
     forum: ForumCollector = Depends(get_forum_collector),
-    _: object = Depends(require_user),
+    _: object = Depends(require_viewer),
 ) -> dict:
     return {"code": 0, "message": "success", "data": {"entries": _entries(forum.latest_log())}}
 
@@ -57,6 +57,6 @@ def log(
 def history(
     body: HistoryBody,
     forum: ForumCollector = Depends(get_forum_collector),
-    _: object = Depends(require_user),
+    _: object = Depends(require_viewer),
 ) -> dict:
     return {"code": 0, "message": "success", "data": {"entries": _entries(forum.history(body.date))}}

@@ -1,21 +1,71 @@
-// ===== API 封装 =====
+// ===== 状态与常量 =====
 const API_BASE = '/api';
+const TOKEN_KEY = 'opineye_token';
+const USER_KEY = 'opineye_user';
 
+// 角色中文名
+const ROLE_LABELS = {
+  admin: '系统管理员',
+  operator: '操作用户',
+  viewer: '报告查看人',
+};
+
+// 每种角色可见的页面（data-page 值）
+const ROLE_PAGES = {
+  // 系统管理员：全部页面
+  admin: ['console', 'search', 'forum', 'graph', 'config', 'system'],
+  // 操作用户：控制台 + 检索 + 论坛 + 图谱（无配置、无系统状态）
+  operator: ['console', 'search', 'forum', 'graph'],
+  // 报告查看人：图谱 + 论坛（只读）+ 控制台（只读状态）
+  viewer: ['console', 'graph', 'forum'],
+};
+
+let currentUser = null;
+
+// ===== 用户信息存取 =====
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || '';
+}
+function saveUser(data) {
+  currentUser = data;
+  localStorage.setItem(USER_KEY, JSON.stringify(data));
+  localStorage.setItem(TOKEN_KEY, data.token);
+}
+function clearUser() {
+  currentUser = null;
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(TOKEN_KEY);
+}
+function loadUserFromStorage() {
+  const raw = localStorage.getItem(USER_KEY);
+  if (raw) {
+    try { currentUser = JSON.parse(raw); } catch (e) { currentUser = null; }
+  }
+}
+
+// ===== API 封装（携带 Authorization 头）=====
 async function request(method, path, body) {
   let r;
+  const headers = { 'Content-Type': 'application/json' };
+  const token = getToken();
+  if (token) headers['Authorization'] = 'Bearer ' + token;
   try {
     r = await fetch(API_BASE + path, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch (e) {
-    // 网络异常
     throw new Error('无法连接服务器，请检查服务是否启动');
+  }
+  // 401：登录失效，跳回登录页
+  if (r.status === 401) {
+    clearUser();
+    showLogin();
+    throw new Error('登录已失效，请重新登录');
   }
   const data = await r.json().catch(() => ({}));
   if (data.code !== 0) {
-    // 业务异常：抛出带后端 message 的错误
     throw new Error(data.message || `请求失败（code=${data.code}）`);
   }
   return data;
@@ -28,7 +78,6 @@ function apiPost(path, body) {
   return request('POST', path, body || {});
 }
 
-// 全局错误提示
 function showError(msg) {
   alert(msg);
 }
@@ -42,9 +91,108 @@ function escapeHtml(s) {
   }[c]));
 }
 
-// ===== 页面导航 =====
-const PAGES = ['console', 'search', 'forum', 'graph', 'config', 'system'];
+// ===== 登录 / 登出 =====
+function showLogin() {
+  $('#app').classList.add('hidden');
+  $('#login-screen').classList.remove('hidden');
+}
 
+function showApp() {
+  $('#login-screen').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+}
+
+// 登录 / 注册 tab 切换
+document.querySelectorAll('.login-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.login-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    const isLogin = tab.dataset.tab === 'login';
+    $('#login-form').classList.toggle('hidden', !isLogin);
+    $('#register-form').classList.toggle('hidden', isLogin);
+    $('#login-error').textContent = '';
+  });
+});
+
+function setLoginError(msg) {
+  $('#login-error').textContent = msg;
+}
+
+$('#btn-login').addEventListener('click', async () => {
+  const username = $('#login-username').value.trim();
+  const password = $('#login-password').value;
+  if (!username || !password) { setLoginError('请输入用户名和密码'); return; }
+  try {
+    const res = await apiPost('/login', { username, password });
+    saveUser(res.data);
+    setLoginError('');
+    enterApp();
+  } catch (e) {
+    setLoginError(e.message);
+  }
+});
+
+$('#btn-register').addEventListener('click', async () => {
+  const username = $('#reg-username').value.trim();
+  const password = $('#reg-password').value;
+  const role = $('#reg-role').value;
+  if (!username || !password) { setLoginError('请输入用户名和密码'); return; }
+  try {
+    const res = await apiPost('/register', { username, password, role });
+    // 注册成功后自动登录
+    const loginRes = await apiPost('/login', { username, password });
+    saveUser(loginRes.data);
+    setLoginError('');
+    enterApp();
+  } catch (e) {
+    setLoginError(e.message);
+  }
+});
+
+// 回车触发登录
+$('#login-password').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') $('#btn-login').click();
+});
+$('#reg-password').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') $('#btn-register').click();
+});
+
+$('#btn-logout').addEventListener('click', () => {
+  clearUser();
+  stopWs();
+  showLogin();
+  // 重置登录表单
+  $('#login-username').value = '';
+  $('#login-password').value = '';
+});
+
+// ===== 进入应用：按角色渲染菜单 =====
+function enterApp() {
+  const role = currentUser.role;
+  $('#user-name').textContent = currentUser.username;
+  $('#user-role').textContent = ROLE_LABELS[role] || role;
+
+  // 渲染导航：仅显示该角色可见的页面
+  const allowedPages = ROLE_PAGES[role] || ROLE_PAGES.viewer;
+  document.querySelectorAll('.nav-item').forEach((item) => {
+    const page = item.dataset.page;
+    if (allowedPages.includes(page)) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+
+  showApp();
+
+  // 默认进入第一个可见页面
+  const firstPage = allowedPages[0] || 'console';
+  showPage(firstPage);
+
+  initWs();
+}
+
+// ===== 页面导航 =====
 function showPage(page) {
   document.querySelectorAll('.nav-item').forEach((n) => {
     n.classList.toggle('active', n.dataset.page === page);
@@ -54,6 +202,7 @@ function showPage(page) {
   // 进入页面时刷新数据
   if (page === 'console' || page === 'system') { loadStatus(); loadSystemStatus(); }
   if (page === 'forum') loadForumLog();
+  if (page === 'graph') { /* 由用户手动加载 */ }
 }
 
 document.querySelectorAll('.nav-item').forEach((item) => {
@@ -69,6 +218,8 @@ async function loadStatus() {
     topic_search: '主题检索', media_search: '多媒体检索', forum_collect: '论坛采集',
     insight: '洞察分析', report: '报告生成', graph: '图谱查询',
   };
+  // operator 及以上可启停应用；viewer 只读
+  const canOperate = currentUser && currentUser.role !== 'viewer';
   cards.innerHTML = Object.entries(apps).map(([name, app]) => `
     <div class="card">
       <div class="card-header">
@@ -76,8 +227,10 @@ async function loadStatus() {
         <span class="status-badge status-${app.status}">${app.status}</span>
       </div>
       <div class="card-actions">
-        <button class="btn primary" onclick="startApp('${name}')">启动</button>
-        <button class="btn danger" onclick="stopApp('${name}')">停止</button>
+        ${canOperate ? `
+          <button class="btn primary" onclick="startApp('${name}')">启动</button>
+          <button class="btn danger" onclick="stopApp('${name}')">停止</button>
+        ` : ''}
         <button class="btn" onclick="viewOutput('${name}')">输出</button>
         <button class="btn" onclick="viewTestLog('${name}')">测试日志</button>
       </div>
@@ -101,7 +254,6 @@ function showAppOutput(title, content) {
   $('#output-title').textContent = title;
   const view = $('#app-output-view');
   view.textContent = content || '(空)';
-  // 滚动到底部（最新内容）
   view.scrollTop = view.scrollHeight;
 }
 
@@ -173,7 +325,6 @@ async function loadForumLog() {
   const entries = res.data?.entries || [];
   const view = $('#forum-log');
   view.textContent = entries.map((e) => `${e.ts} [${e.event_type}] (${e.task_status}) ${e.message}`).join('\n') || '(无日志)';
-  // 自动滚动到底部（最新日志）
   view.scrollTop = view.scrollHeight;
 }
 
@@ -278,51 +429,50 @@ async function loadSystemStatus() {
   `).join('');
 }
 
-// 系统启停按钮（首页）
-$('#btn-system-start').addEventListener('click', async () => {
-  try {
-    await apiPost('/system/start');
-    loadStatus();
-  } catch (e) { showError(e.message); }
-});
-$('#btn-system-shutdown').addEventListener('click', async () => {
-  try {
-    await apiPost('/system/shutdown');
-    loadStatus();
-  } catch (e) { showError(e.message); }
-});
+// 系统启停按钮（首页，仅 admin）
+function setSystemButtonsVisibility() {
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const toolbar = $('#console-toolbar');
+  if (toolbar) toolbar.style.display = isAdmin ? '' : 'none';
+}
 
 // ===== WebSocket 实时消息 =====
+let ws = null;
 function initWs() {
+  if (ws) { try { ws.close(); } catch (e) {} }
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const ws = new WebSocket(`${proto}//${location.host}/ws`);
+  ws = new WebSocket(`${proto}//${location.host}/ws`);
   ws.onopen = () => {
-    $('#ws-indicator').textContent = '● 实时消息已连接';
-    $('#ws-indicator').classList.remove('off');
-    $('#ws-indicator').classList.add('on');
+    const indicator = $('#ws-indicator');
+    if (indicator) {
+      indicator.textContent = '● 实时消息已连接';
+      indicator.classList.remove('off');
+      indicator.classList.add('on');
+    }
   };
   ws.onclose = () => {
-    $('#ws-indicator').textContent = '● 实时消息未连接';
-    $('#ws-indicator').classList.remove('on');
-    $('#ws-indicator').classList.add('off');
+    const indicator = $('#ws-indicator');
+    if (indicator) {
+      indicator.textContent = '● 实时消息未连接';
+      indicator.classList.remove('on');
+      indicator.classList.add('off');
+    }
   };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.type === 'app_status' || msg.type === 'system_status') {
-      loadStatus();
-      loadSystemStatus();
+      loadStatus().catch(() => {});
+      loadSystemStatus().catch(() => {});
     }
     if (msg.type === 'forum_log') {
-      loadForumLog();
+      loadForumLog().catch(() => {});
     }
     if (msg.type === 'app_output') {
-      // 应用输出：控制台输出摘要（可扩展为滚动日志）
       console.log('[app_output]', msg.payload.app_name, msg.payload.output_text);
     }
     if (msg.type === 'graph_ready') {
-      // 图谱就绪：自动加载最新图谱
       console.log('[graph_ready]', msg.payload.report_id);
-      loadGraphByReport(msg.payload.report_id);
+      loadGraphByReport(msg.payload.report_id).catch(() => {});
     }
     if (msg.type === 'error') {
       console.error('[error]', msg.payload.module_name, msg.payload.error_message);
@@ -330,24 +480,30 @@ function initWs() {
   };
 }
 
-// ===== 初始化 =====
-loadStatus().catch(() => {});
-loadSystemStatus().catch(() => {});
+function stopWs() {
+  if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+}
 
-// 解析 URL 路径：支持 /graph-viewer 与 /graph-viewer/{report_id}
+// ===== 解析 URL 路径：支持 /graph-viewer 与 /graph-viewer/{report_id} =====
 function handleGraphViewerRoute() {
   const m = location.pathname.match(/^\/graph-viewer(?:\/([^/]+))?/);
   if (!m) return;
   showPage('graph');
   if (m[1]) {
-    // 指定 report_id
     $('#graph-report-id').value = m[1];
     loadGraphByReport(m[1]);
   } else {
-    // 无 report_id，加载最新图谱
     loadLatestGraph();
   }
 }
 
-initWs();
-handleGraphViewerRoute();
+// ===== 初始化 =====
+loadUserFromStorage();
+
+if (currentUser && getToken()) {
+  // 已有登录态，直接进入应用（可先校验 token）
+  enterApp();
+  setSystemButtonsVisibility();
+} else {
+  showLogin();
+}

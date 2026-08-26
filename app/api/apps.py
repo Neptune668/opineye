@@ -1,13 +1,13 @@
 """单功能应用启停路由：/api/status、/api/start/{app_name}、/api/stop/{app_name}。
 
-权限：status 允许 user 及以上；start/stop 仅 root。
+权限：status 允许 viewer 及以上；start/stop 仅 operator 及以上。
 """
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from app.api.deps import require_admin, require_user
+from app.api.deps import require_operator, require_viewer
 from app.dependencies import get_process_manager
 from app.services.process_manager import ProcessManager
 
@@ -24,7 +24,7 @@ def _status_to_dict(st: dict) -> dict:
 @router.get("/status")
 def get_status(
     pm: ProcessManager = Depends(get_process_manager),
-    _: object = Depends(require_user),
+    _: object = Depends(require_viewer),
 ) -> dict:
     st = pm.status()
     return {"code": 0, "message": "success", "data": _status_to_dict(st)}
@@ -34,7 +34,7 @@ def get_status(
 def start_app(
     app_name: str,
     pm: ProcessManager = Depends(get_process_manager),
-    _: object = Depends(require_admin),
+    _: object = Depends(require_operator),
 ) -> dict:
     st = pm.start(app_name)
     return {
@@ -48,7 +48,7 @@ def start_app(
 def stop_app(
     app_name: str,
     pm: ProcessManager = Depends(get_process_manager),
-    _: object = Depends(require_admin),
+    _: object = Depends(require_operator),
 ) -> dict:
     st = pm.stop(app_name)
     return {

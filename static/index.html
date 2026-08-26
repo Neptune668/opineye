@@ -7,14 +7,46 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="layout">
+  <!-- 登录页 -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="brand login-brand">
+        <span class="brand-dot"></span>
+        <span>舆情分析平台</span>
+      </div>
+      <p class="login-sub">请登录以继续</p>
+      <div class="login-tabs">
+        <button class="login-tab active" data-tab="login">登录</button>
+        <button class="login-tab" data-tab="register">注册</button>
+      </div>
+      <div id="login-form" class="login-form">
+        <input type="text" id="login-username" placeholder="用户名" autocomplete="username" />
+        <input type="password" id="login-password" placeholder="密码" autocomplete="current-password" />
+        <button class="btn primary login-btn" id="btn-login">登录</button>
+      </div>
+      <div id="register-form" class="login-form hidden">
+        <input type="text" id="reg-username" placeholder="用户名" autocomplete="username" />
+        <input type="password" id="reg-password" placeholder="密码" autocomplete="new-password" />
+        <select id="reg-role">
+          <option value="operator">操作用户</option>
+          <option value="viewer">报告查看人</option>
+        </select>
+        <button class="btn primary login-btn" id="btn-register">注册</button>
+      </div>
+      <p id="login-error" class="login-error"></p>
+      <p class="login-hint">内置管理员账号：admin / 1234</p>
+    </div>
+  </div>
+
+  <!-- 主应用 -->
+  <div id="app" class="layout hidden">
     <!-- 侧边栏 -->
     <aside class="sidebar">
       <div class="brand">
         <span class="brand-dot"></span>
         <span>舆情分析平台</span>
       </div>
-      <nav class="nav">
+      <nav class="nav" id="nav">
         <a class="nav-item active" data-page="console">控制台首页</a>
         <a class="nav-item" data-page="search">主题检索</a>
         <a class="nav-item" data-page="forum">论坛监控</a>
@@ -23,6 +55,13 @@
         <a class="nav-item" data-page="system">系统状态</a>
       </nav>
       <div class="sidebar-footer">
+        <div class="user-box">
+          <span id="user-name" class="user-name"></span>
+          <span id="user-role" class="user-role"></span>
+        </div>
+        <div class="user-actions">
+          <button class="btn btn-sm" id="btn-logout">退出登录</button>
+        </div>
         <span id="ws-indicator" class="ws-indicator off">● 实时消息未连接</span>
       </div>
     </aside>
@@ -32,7 +71,7 @@
       <!-- 控制台首页 -->
       <section class="page active" id="page-console">
         <h2>控制台首页</h2>
-        <div class="toolbar">
+        <div class="toolbar" id="console-toolbar">
           <button class="btn primary" id="btn-system-start">启动系统</button>
           <button class="btn danger" id="btn-system-shutdown">关闭系统</button>
         </div>

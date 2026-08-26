@@ -1,4 +1,7 @@
-"""图谱模块路由：/api/graph/latest、/api/graph/{report_id}、/api/graph/query。"""
+"""图谱模块路由：/api/graph/latest、/api/graph/{report_id}、/api/graph/query。
+
+权限：允许 viewer 及以上。
+"""
 
 from __future__ import annotations
 
@@ -6,7 +9,7 @@ from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends
 
-from app.api.deps import require_user
+from app.api.deps import require_viewer
 from app.dependencies import get_graph_store
 from app.services.graph_service import FileGraphStore, GraphData
 
@@ -36,7 +39,7 @@ def _serialize(g: GraphData) -> dict:
 @router.get("/latest")
 def latest(
     store: FileGraphStore = Depends(get_graph_store),
-    _: object = Depends(require_user),
+    _: object = Depends(require_viewer),
 ) -> dict:
     return {"code": 0, "message": "success", "data": _serialize(store.latest())}
 
@@ -45,7 +48,7 @@ def latest(
 def get_graph(
     report_id: str,
     store: FileGraphStore = Depends(get_graph_store),
-    _: object = Depends(require_user),
+    _: object = Depends(require_viewer),
 ) -> dict:
     return {"code": 0, "message": "success", "data": _serialize(store.load(report_id))}
 
@@ -54,7 +57,7 @@ def get_graph(
 def query(
     body: QueryBody,
     store: FileGraphStore = Depends(get_graph_store),
-    _: object = Depends(require_user),
+    _: object = Depends(require_viewer),
 ) -> dict:
     cond = {}
     if body.node_id:

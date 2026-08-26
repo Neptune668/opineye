@@ -1,4 +1,7 @@
-"""主题检索路由：POST /api/search。"""
+"""主题检索路由：POST /api/search。
+
+权限：允许 operator 及以上（操作用户可发起检索）。
+"""
 
 from __future__ import annotations
 
@@ -6,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, Depends
 
-from app.api.deps import require_user
+from app.api.deps import require_operator
 from app.dependencies import get_search_engine
 from app.services.search_service import SearchEngine, SearchRequest
 
@@ -22,7 +25,7 @@ class SearchBody(BaseModel):
 def search(
     body: SearchBody,
     engine: SearchEngine = Depends(get_search_engine),
-    _: object = Depends(require_user),
+    _: object = Depends(require_operator),
 ) -> dict:
     result = engine.search(SearchRequest(query=body.query, source_types=body.source_types))
     return {

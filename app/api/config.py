@@ -1,6 +1,6 @@
 """配置模块路由：GET/POST /api/config。
 
-权限：GET 允许 user 及以上；POST（修改）仅 root。
+权限：GET 允许 viewer 及以上；POST（修改）仅 admin。
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Body, Depends
 
-from app.api.deps import require_admin, require_user
+from app.api.deps import require_admin, require_viewer
 from app.dependencies import get_config_service
 from app.services.config_service import ConfigService
 
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api", tags=["config"])
 @router.get("/config")
 def get_config(
     svc: ConfigService = Depends(get_config_service),
-    _: object = Depends(require_user),
+    _: object = Depends(require_viewer),
 ) -> dict:
     cfg = svc.read()
     return {"code": 0, "message": "success", "data": cfg.data}
