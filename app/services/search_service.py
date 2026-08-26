@@ -77,7 +77,49 @@ class RuleSearchEngine:
         # 同步生成图谱
         graph = build_graph(report.report_id, query, analysis)
         self._graph_store.save(graph)
+        # 尽力落库检索任务与来源（降级不阻断）
+        self._persist_task(task_id, query, request.source_types, report.report_id, sources)
         return SearchResult(task_id=task_id, sources=sources, analysis=analysis, report=report)
+
+    def _persist_task(
+        self,
+        task_id: str,
+        query: str,
+        source_types: list[str],
+        report_id: str,
+        sources: list[SourceItem],
+    ) -> None:
+        """尽力落库检索任务与来源记录，失败降级不阻断。"""
+        try:
+            from app.models.base import SessionLocal
+            from app.models.search import SearchTask, Source
+
+            db = SessionLocal()
+            try:
+                db.add(
+                    SearchTask(
+                        task_id=task_id,
+                        query=query,
+                        source_types=source_types,
+                        status="completed",
+                        report_id=report_id,
+                    )
+                )
+                for s in sources:
+                    db.add(
+                        Source(
+                            task_id=task_id,
+                            source_type=s.source_type,
+                            title=s.title,
+                            url=s.url,
+                            summary=s.summary,
+                        )
+                    )
+                db.commit()
+            finally:
+                db.close()
+        except Exception:  # noqa: BLE001 - 落库失败仅记录日志
+            logger.exception("检索任务落库失败（降级）", extra={"task_id": task_id})
 
     def _analyze(self, query: str, sources: list[SourceItem]) -> AnalysisOutput:
         keywords = keyword.extract_keywords(sources)

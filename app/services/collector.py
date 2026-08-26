@@ -11,10 +11,10 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from app.services.collect_models import CollectRequest, SourceItem
 from app.services.datasource import DataSource
 from app.utils.constants import SourceType
 from app.utils.logging import get_logger
@@ -24,24 +24,8 @@ logger = get_logger(__name__)
 
 DATA_DIR = PROJECT_ROOT / "data"
 
-
-@dataclass(frozen=True)
-class SourceItem:
-    """采集来源条目（契约，冻结）。"""
-
-    source_type: str
-    title: str
-    url: str | None = None
-    summary: str | None = None
-    published_at: float | None = None  # epoch 秒
-
-
-@dataclass(frozen=True)
-class CollectRequest:
-    """采集请求。"""
-
-    query: str
-    source_types: list[str]
+# 向后兼容：重新导出数据模型
+__all__ = ["SourceItem", "CollectRequest", "Collector", "InternalDataCollector", "DataSourceCollector", "CompositeCollector"]
 
 
 class Collector(Protocol):

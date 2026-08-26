@@ -7,6 +7,7 @@ Create Date: 2026-08-26
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import mysql
 
 revision = "0001"
 down_revision = None
@@ -24,8 +25,8 @@ def upgrade() -> None:
         sa.Column("status", sa.String(32), nullable=False, server_default="stopped"),
         sa.Column("report_id", sa.String(64), nullable=True),
         sa.Column("error_msg", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
-        sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
+        sa.Column("created_at", mysql.DATETIME(fsp=3), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
+        sa.Column("updated_at", mysql.DATETIME(fsp=3), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("task_id"),
         mysql_engine="InnoDB",
@@ -43,8 +44,8 @@ def upgrade() -> None:
         sa.Column("title", sa.String(512), nullable=False),
         sa.Column("url", sa.String(1024), nullable=True),
         sa.Column("summary", sa.Text(), nullable=True),
-        sa.Column("published_at", sa.DateTime(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
+        sa.Column("published_at", mysql.DATETIME(fsp=3), nullable=True),
+        sa.Column("created_at", mysql.DATETIME(fsp=3), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
         sa.PrimaryKeyConstraint("id"),
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
@@ -58,7 +59,7 @@ def upgrade() -> None:
         sa.Column("report_id", sa.String(64), nullable=False),
         sa.Column("topic", sa.String(255), nullable=False),
         sa.Column("file_path", sa.String(512), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
+        sa.Column("created_at", mysql.DATETIME(fsp=3), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP(3)")),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("report_id"),
         mysql_engine="InnoDB",
@@ -100,7 +101,7 @@ def upgrade() -> None:
     op.create_table(
         "forum_logs",
         sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
-        sa.Column("ts", sa.DateTime(), nullable=False),
+        sa.Column("ts", mysql.DATETIME(fsp=3), nullable=False),
         sa.Column("event_type", sa.String(32), nullable=False),
         sa.Column("message", sa.Text(), nullable=False),
         sa.Column("task_status", sa.String(32), nullable=False),

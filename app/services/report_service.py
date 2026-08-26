@@ -63,15 +63,20 @@ class MarkdownReportWriter:
         return meta
 
     def _persist(self, meta: ReportMeta) -> None:
-        """尽力落库报告元数据，失败降级不阻断。"""
-        if self._report_repository is None:
-            return
+        """尽力落库报告元数据，失败降级不阻断。
+
+        每次创建独立 session，避免单例绑定 session 导致生命周期混乱。
+        """
         try:
+            from app.models.base import SessionLocal
             from app.models.report import Report
 
-            self._report_repository.create(
-                Report(report_id=meta.report_id, topic=meta.topic, file_path=meta.file_path)
-            )
+            db = SessionLocal()
+            try:
+                db.add(Report(report_id=meta.report_id, topic=meta.topic, file_path=meta.file_path))
+                db.commit()
+            finally:
+                db.close()
         except Exception:  # noqa: BLE001 - 落库失败仅记录日志
             logger.exception("报告元数据落库失败（降级）", extra={"report_id": meta.report_id})
 

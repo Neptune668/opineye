@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     llm_base_url: str = ""
     llm_model: str = ""
 
+    # Tavily 搜索
+    tavily_api_key: str = ""
+
     secret_key: str = "change-me"
 
 
