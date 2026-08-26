@@ -15,15 +15,40 @@ import requests
 BASE_URL = "http://127.0.0.1:8000"
 
 
+def _auth_headers() -> dict:
+    """注册一个操作用户（幂等）并登录，返回带 token 的请求头。"""
+    username, password = "demo", "1234"
+    # 注册（已存在则忽略 409）
+    try:
+        requests.post(
+            f"{BASE_URL}/api/register",
+            json={"username": username, "password": password, "role": "operator"},
+            timeout=10,
+        )
+    except requests.HTTPError:
+        pass
+    r = requests.post(
+        f"{BASE_URL}/api/login",
+        json={"username": username, "password": password},
+        timeout=10,
+    )
+    r.raise_for_status()
+    token = r.json()["data"]["token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 def main() -> None:
     query = sys.argv[1] if len(sys.argv) > 1 else "新品"
     print(f"=== 主题检索演示：{query} ===")
+
+    headers = _auth_headers()
 
     # 1. 发起主题检索
     print("\n[1] 发起主题检索 POST /api/search")
     r = requests.post(
         f"{BASE_URL}/api/search",
         json={"query": query, "source_types": ["internal_data"]},
+        headers=headers,
     )
     r.raise_for_status()
     data = r.json()["data"]
@@ -43,7 +68,7 @@ def main() -> None:
 
     # 3. 查看图谱
     print("\n[3] 查看指定报告图谱 GET /api/graph/{report_id}")
-    r = requests.get(f"{BASE_URL}/api/graph/{report_id}")
+    r = requests.get(f"{BASE_URL}/api/graph/{report_id}", headers=headers)
     r.raise_for_status()
     g = r.json()["data"]
     print(f"  节点数 = {len(g['nodes'])}，边数 = {len(g['edges'])}")
@@ -55,6 +80,7 @@ def main() -> None:
     r = requests.post(
         f"{BASE_URL}/api/graph/query",
         json={"report_id": report_id, "node_id": "topic"},
+        headers=headers,
     )
     r.raise_for_status()
     q = r.json()["data"]
